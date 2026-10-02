@@ -1,0 +1,34 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+env/
+.ipynb_checkpoints/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# Node (only used for rendering docs)
+node_modules/
+
+# Local scratch — never commit working files
+scratch/
+tmp/
+*.log
+
+# NOTE ON data/
+# The generated tables ARE committed on purpose. They are small (a few MB),
+# they are produced from fixed seeds, and committing them means a judge can
+# clone this repository and reproduce every reported number without running
+# the generator first. If you ever point this pipeline at real Hutch extracts,
+# uncomment the lines below immediately — no real subscriber data should ever
+# reach a public repository.
+#
+# data/*.csv
+# data/*.parquet

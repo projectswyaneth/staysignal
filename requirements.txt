@@ -1,0 +1,16 @@
+# StaySignal — everything the pipeline needs.
+# Python 3.10 or newer.
+#
+#   pip install -r requirements.txt
+#
+# The console (frontend/) needs none of this: it is static HTML, CSS and
+# JavaScript with no build step and no dependencies.
+
+numpy>=1.26
+pandas>=2.1
+scikit-learn>=1.4
+matplotlib>=3.8
+
+# Optional — only for the scoring API in backend/
+# fastapi>=0.110
+# uvicorn>=0.29

@@ -1,0 +1,283 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>StaySignal — system architecture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#12100E; --body:#453F3A; --muted:#8A827B;
+    --orange:#E8490B; --orange-soft:#FDF1EB;
+    --line:#E4DED8; --panel:#FAF8F6; --paper:#FFFFFF;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    width:1480px; background:var(--paper); color:var(--body);
+    font-family:Inter,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased; padding:52px 56px 44px;
+  }
+  h1{font-size:33px; letter-spacing:-.022em; color:var(--ink); font-weight:700}
+  .sub{font-size:15px; color:var(--muted); margin-top:9px; letter-spacing:-.005em}
+  .sub b{color:var(--orange); font-weight:600}
+
+  .boundary{
+    margin-top:26px; border:2px dashed var(--orange); border-radius:20px;
+    background:linear-gradient(180deg,#FFFCFB,#FFFFFF 180px); padding:22px 24px 26px;
+  }
+  .boundary-tag{
+    display:inline-flex; align-items:center; gap:9px;
+    font-size:12.5px; font-weight:700; letter-spacing:.07em; text-transform:uppercase;
+    color:var(--orange); background:var(--orange-soft);
+    border:1px solid #F6D3C3; border-radius:999px; padding:7px 14px;
+  }
+  .boundary-tag span{font-weight:500; text-transform:none; letter-spacing:0; color:#A8502F}
+
+  .band{margin-top:22px}
+  .band-h{
+    display:flex; align-items:baseline; gap:11px; margin-bottom:11px;
+    padding-bottom:7px; border-bottom:1px solid var(--line);
+  }
+  .n{
+    flex:none; width:23px; height:23px; border-radius:6px;
+    background:var(--ink); color:#fff; font-size:12.5px; font-weight:700;
+    display:grid; place-items:center; font-variant-numeric:tabular-nums;
+  }
+  .band-h h2{font-size:15.5px; color:var(--ink); font-weight:650; letter-spacing:-.01em}
+  .band-h p{font-size:13px; color:var(--muted); margin-left:auto; text-align:right}
+
+  .row{display:grid; gap:13px}
+  .c5{grid-template-columns:repeat(5,1fr)}
+  .c6{grid-template-columns:repeat(6,1fr)}
+  .c3{grid-template-columns:repeat(3,1fr)}
+  .c2{grid-template-columns:1.72fr 1fr}
+
+  .box{
+    border:1px solid var(--line); border-radius:11px; background:var(--panel);
+    padding:13px 14px 14px; min-height:0;
+  }
+  .box h3{
+    font-size:12.5px; font-weight:700; color:var(--ink); letter-spacing:-.005em;
+    line-height:1.25; margin-bottom:6px;
+  }
+  .box p{font-size:11.8px; line-height:1.48; color:var(--body)}
+  .box .src{
+    display:block; margin-top:8px; font-family:"JetBrains Mono",ui-monospace,monospace;
+    font-size:10.3px; color:var(--muted); letter-spacing:-.01em;
+  }
+  .ok{
+    display:inline-block; margin-top:9px; font-size:10.2px; font-weight:650;
+    letter-spacing:.045em; text-transform:uppercase;
+    color:#1C6B3A; background:#EAF6EE; border:1px solid #C8E6D3;
+    border-radius:5px; padding:3px 7px;
+  }
+  .box.outside{background:#fff; border-style:dashed; border-color:#D8D1CA}
+  .box.outside .ok{color:#8A5A1C; background:#FDF4E6; border-color:#EFDCBC}
+  .box.lead{background:#fff; border-color:#D9D2CB; box-shadow:0 1px 0 #F1ECE7}
+  .box.hot{background:var(--orange-soft); border-color:#F3CDBB}
+  .box.hot h3{color:#A53607}
+  .box.dark{background:var(--ink); border-color:var(--ink)}
+  .box.dark h3{color:#fff}
+  .box.dark p{color:#C9C2BB}
+
+  .pills{display:flex; flex-wrap:wrap; gap:7px; margin-top:11px}
+  .pill{
+    font-family:"JetBrains Mono",ui-monospace,monospace; font-size:10.5px;
+    color:var(--ink); background:#fff; border:1px solid var(--line);
+    border-radius:6px; padding:4px 8px;
+  }
+  .count{
+    float:right; font-size:10.3px; font-weight:700; color:var(--orange);
+    background:#fff; border:1px solid #F3CDBB; border-radius:5px; padding:2px 6px;
+    margin-left:6px;
+  }
+  .flow{
+    display:flex; align-items:center; justify-content:center; gap:10px;
+    margin:13px 0 2px; font-size:11.3px; color:var(--muted);
+  }
+  .flow i{
+    display:block; width:1px; height:15px; background:var(--line);
+  }
+  .arrow{color:var(--orange); font-size:14px; line-height:1}
+
+  .feedback{
+    margin-top:14px; border:1px dashed #D8D1CA; border-radius:10px;
+    padding:11px 14px; font-size:12px; color:var(--body); background:#fff;
+  }
+  .feedback b{color:var(--ink)}
+
+  footer{
+    margin-top:22px; display:flex; gap:26px; align-items:flex-start;
+    font-size:11.8px; color:var(--muted); line-height:1.5;
+  }
+  footer div{flex:1}
+  footer b{color:var(--ink)}
+</style>
+
+<h1>StaySignal — system architecture</h1>
+<p class="sub">A <b>Customer Experience Management</b> module for prepaid: it detects silent
+customer-experience failures, identifies the cause from network, usage, billing and market data,
+and triggers the matching recovery action. &nbsp;·&nbsp; Team Falconyx · IgnitX by Hutch 2026 · Track B 4.2.3</p>
+
+<div class="boundary">
+  <div class="boundary-tag">Deployed inside Hutch
+    <span>— subscriber data never leaves the operator's boundary, and no per-customer call is made to any external service</span>
+  </div>
+
+  <!-- 1 -->
+  <div class="band">
+    <div class="band-h"><div class="n">1</div><h2>Source systems — every one of these already exists at Hutch</h2>
+      <p>Availability confirmed by Hutch IT, 1 Oct 2026</p></div>
+    <div class="row c5">
+      <div class="box"><h3>OSS / NMS</h3>
+        <p>Per-cell quality KPIs the network team already watches every day.</p>
+        <span class="src">call_drop_rate · avg_sinr_db<br>prb_utilisation · handover_success<br>outage_minutes</span>
+        <span class="ok">confirmed available</span></div>
+      <div class="box"><h3>CDR / xDR mediation</h3>
+        <p>Which cell served each subscriber, and how widely they moved.</p>
+        <span class="src">serving_cell · home_cell_share<br>distinct_cells · distinct_regions<br>attached</span>
+        <span class="ok">confirmed available</span></div>
+      <div class="box"><h3>Prepaid data warehouse</h3>
+        <p>Recharge, usage and billing history, week by week.</p>
+        <span class="src">recharges · data_gb · voice<br>app_opens · plan · quota<br>overage · tenure · complaints</span>
+        <span class="ok">confirmed available</span></div>
+      <div class="box"><h3>Site / cell database</h3>
+        <p>Which towers are shared or co-located with another operator. Needed to read interference honestly.</p>
+        <span class="src">cell_id · region · shared_site</span></div>
+      <div class="box outside"><h3>Market feed</h3>
+        <p>The only input from outside Hutch, and it carries no personal data — district totals only.</p>
+        <span class="src">MNP port-out by district<br>competitor campaign calendar</span>
+        <span class="ok">external, aggregate</span></div>
+    </div>
+  </div>
+
+  <div class="flow"><i></i><span class="arrow">▼</span> nightly batch extract — no production system is ever queried live <span class="arrow">▼</span><i></i></div>
+
+  <!-- 2 -->
+  <div class="band">
+    <div class="band-h"><div class="n">2</div><h2>Adapter — <code>integrations/oss_adapter.py</code></h2>
+      <p>The only file that changes when real extracts arrive</p></div>
+    <div class="row">
+      <div class="box lead">
+        <h3>Hutch's own field names in, four canonical tables out</h3>
+        <p>One declarative mapping per source. It renames columns, converts units, validates every KPI
+        against its physical range, reports what is missing instead of silently filling it, and aggregates
+        to one row per week. Nothing downstream knows or cares which system the data came from — which is
+        why the model does not need to be rewritten to go live.</p>
+        <div class="pills">
+          <span class="pill">cells_weekly</span><span class="pill">customers_weekly</span>
+          <span class="pill">customers_static</span><span class="pill">market_weekly</span>
+          <span class="pill">REST · Kafka · warehouse batch — all three supported</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow"><i></i><span class="arrow">▼</span><i></i></div>
+
+  <!-- 3 -->
+  <div class="band">
+    <div class="band-h"><div class="n">3</div><h2>Features — <code>ml/features.py</code>, one definition shared by training and scoring</h2>
+      <p>Nothing is judged in absolute terms</p></div>
+    <div class="row c6">
+      <div class="box"><h3>A · vs their own past<span class="count">4</span></h3>
+        <p>Each customer against their own baseline, because 8 GB is a lot for one person and nothing for another.</p>
+        <span class="src">data_ratio · opens_ratio<br>recharge_ratio<br>quota_utilisation</span></div>
+      <div class="box hot"><h3>B · vs the whole base<span class="count">2</span></h3>
+        <p>Did they fall further than everyone else fell that week? Seasonality cancels itself out — no holiday calendar needed.</p>
+        <span class="src">data_ratio_vs_base<br>opens_ratio_vs_base</span></div>
+      <div class="box hot"><h3>C · presence &amp; mobility<span class="count">7</span></h3>
+        <p>A leaver is at home and silent. A traveller is away and still active. A sales rep is always everywhere — so mobility is read against their own normal.</p>
+        <span class="src">home_cell_share · home_share_drop<br>home_share_ratio · mobility_ratio<br>regions_seen · regions_ratio<br>weeks_since_attach</span></div>
+      <div class="box hot"><h3>D · network on own cells<span class="count">6</span></h3>
+        <p>Each cell against its own healthy level. SINR loss our own load cannot explain is interference, not congestion.</p>
+        <span class="src">cell_drop_delta · cell_sinr_delta<br>cell_congestion · cell_congestion_delta<br>cell_interference · cell_outage_hours</span></div>
+      <div class="box"><h3>E · commercial<span class="count">4</span></h3>
+        <p>Bill shock, loyalty and what the customer is actually worth.</p>
+        <span class="src">has_overage · complaints<br>tenure_months · monthly_spend</span></div>
+      <div class="box hot"><h3>F · market context<span class="count">1</span></h3>
+        <p>A rival's promotion in their district. Nothing inside Hutch can explain it, so it comes from outside.</p>
+        <span class="src">market_pressure</span></div>
+    </div>
+  </div>
+
+  <div class="flow"><i></i><span class="arrow">▼</span> the same module builds features for training and for serving, so the two can never drift apart <span class="arrow">▼</span><i></i></div>
+
+  <!-- 4 -->
+  <div class="band">
+    <div class="band-h"><div class="n">4</div><h2>Model — <code>models/model.json</code></h2>
+      <p>ROC AUC 0.864 · PR AUC 0.607 · 5-fold CV 0.857 ± 0.008</p></div>
+    <div class="row c2">
+      <div class="box lead">
+        <h3>Logistic regression, 24 weights</h3>
+        <p>Risk is literally the sum of each feature's weighted contribution, so every score decomposes
+        exactly rather than approximately — the console ranks those contributions and shows an agent why
+        the number is what it is. Benchmarked against gradient boosting on identical data: the linear model
+        scores <b>higher</b> (0.864 vs 0.840), so the explainability the challenge requires costs nothing.</p>
+      </div>
+      <div class="box dark">
+        <h3>No LLM. No neural network.</h3>
+        <p>24 multiplications and one sigmoid per customer. Scoring an entire prepaid base is seconds of CPU
+        and no token bill at all — so there is no inference cost to forecast, and nothing leaves the building
+        to be scored.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="flow"><i></i><span class="arrow">▼</span><i></i></div>
+
+  <!-- 5 -->
+  <div class="band">
+    <div class="band-h"><div class="n">5</div><h2>Policy — business rules, deliberately not learned</h2>
+      <p>Hutch can change any of this without retraining</p></div>
+    <div class="row c3">
+      <div class="box"><h3>Threshold tuned on money, not accuracy</h3>
+        <p>The alert line is the one that loses the least revenue, given that an offer costs real margin and
+        is wasted on anyone who was never leaving. Not the best F1 score — a different question.</p>
+        <span class="src">threshold = 0.43 · recall 50% · precision 65%</span></div>
+      <div class="box hot"><h3>Suppression — flagged is not contacted</h3>
+        <p>A high score means this customer's experience is degrading. It does not mean spend money today.
+        Three rules hold the offer back, all of them relative to the customer's own normal.</p>
+        <span class="src">travelling — away from their own usual towers<br>seasonal — the whole base is down<br>fatigue — contacted in the last 30 days</span></div>
+      <div class="box"><h3>Cause attribution</h3>
+        <p>The same features name the most likely reason, so the action can match it. A customer with a bad
+        cell gets a repair update, not a discount — a discount does not fix a dropped signal.</p>
+        <span class="src">network · bill shock · plan too big<br>plan too small (upsell)<br>losing interest · competitor offer</span></div>
+    </div>
+  </div>
+
+  <div class="flow"><i></i><span class="arrow">▼</span><i></i></div>
+
+  <!-- 6 -->
+  <div class="band">
+    <div class="band-h"><div class="n">6</div><h2>Action &amp; interface</h2>
+      <p>Prototype: <code>staysignalbyfalconyx.netlify.app</code></p></div>
+    <div class="row c3">
+      <div class="box"><h3>Offer matched to the cause</h3>
+        <p>One action per cause, each with a named owner and a cost. Network faults route to the RF team as a
+        work order rather than to marketing as a discount.</p></div>
+      <div class="box"><h3>Message in the customer's language</h3>
+        <p>SMS written in Sinhala, Tamil or English, chosen from the customer's own language field — not
+        translated at send time.</p></div>
+      <div class="box"><h3>CEM console for agents</h3>
+        <p>Ranked queue, the evidence behind each score, the named tower, and a separate held-back queue so a
+        suppressed customer is visible instead of silently dropped.</p></div>
+    </div>
+    <div class="feedback">
+      <b>Feedback loop.</b> Every contact, every outcome and every suppression reason is written back to the
+      warehouse, so the next retrain learns from what actually worked — and the save rate stops being an
+      assumption and becomes a measurement.
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div><b>All data in this repository is simulated.</b> No Hutch APIs, credentials, production systems
+  or data were used. Field names and value ranges follow standard telecom KPI definitions so the schema
+  matches a real export; only the adapter changes when real extracts arrive.</div>
+  <div><b>Scale.</b> Nightly batch over the full base; the heavy step is one group-by per table.
+  A one-million-subscriber base is a single-machine job, and the model itself is 24 multiplications
+  per customer.</div>
+  <div><b>Privacy.</b> No message content, no packet inspection, no location beyond the cell the network
+  already records for billing. The only external input is district-level market data containing no
+  personal information.</div>
+</footer>

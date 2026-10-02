@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>StaySignal — know why they're leaving</title>
+<meta name="description" content="StaySignal finds Hutch customers going quiet, diagnoses why, and sends the offer that matches the reason — in Sinhala, Tamil or English.">
+
+<!-- how the link looks when it is shared -->
+<meta property="og:type" content="website">
+<meta property="og:title" content="StaySignal — know why they're leaving">
+<meta property="og:description" content="Predictive retention for Hutch. Detect the customers going quiet, diagnose the real reason, and send the fix that matches it. IgnitX 2026, Track B.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#08090A">
+
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2308090A'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23FF5A1F'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23FF5A1F' stroke-opacity='.45' stroke-width='1.5'/%3E%3C/svg%3E">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="progress" id="progress"></div>
+
+<nav class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="#top"><span class="brand-dot"></span> StaySignal</a>
+    <div class="nav-links">
+      <a href="#how">How it works</a>
+      <a href="#console">Console</a>
+      <a href="#model">The model</a>
+      <button class="btn btn-primary" id="demo-btn">Open a live case</button>
+    </div>
+  </div>
+</nav>
+
+<!-- ------------------------------------------------------------- hero -->
+<header class="hero" id="top">
+  <canvas class="field" id="field" aria-hidden="true"></canvas>
+  <div class="hero-fade"></div>
+
+  <div class="wrap hero-in">
+    <div class="eyebrow reveal" data-d="0">Predictive retention for Hutch</div>
+
+    <h1 class="hero-title">
+      <span class="ln"><i data-d="1">Know</i> <i data-d="2">why</i> <i data-d="3">they're</i> <i data-d="4">leaving.</i></span>
+      <span class="ln dim"><i data-d="5">Fix</i> <i data-d="6">it</i> <i data-d="7">before</i> <i data-d="8">they</i> <i data-d="9">go.</i></span>
+    </h1>
+
+    <p class="hero-lede reveal" data-d="10">
+      Customers don't complain before they leave — they go quiet. StaySignal reads the
+      quiet, names the real reason, and sends the fix that matches it.
+    </p>
+
+    <div class="hero-actions reveal" data-d="11">
+      <a class="btn btn-primary btn-lg" href="#console">Open the console</a>
+      <a class="btn btn-lg" href="#model">See the model</a>
+    </div>
+  </div>
+
+  <div class="hero-meter reveal" data-d="12">
+    <span class="hero-meter-n mono" id="quiet-count">0</span>
+    <span class="hero-meter-l">going quiet, right now</span>
+  </div>
+
+  <a class="scroll-cue" href="#how" aria-label="Scroll">
+    <span></span>
+  </a>
+</header>
+
+<!-- ------------------------------------------------------------ marquee -->
+<div class="marquee" aria-hidden="true">
+  <div class="marquee-track">
+    <span>Network problem</span><i>·</i><span>Bill shock</span><i>·</i>
+    <span>Package too big</span><i>·</i><span>Package too small</span><i>·</i><span>Competitor offer</span><i>·</i><span>Losing interest</span><i>·</i>
+    <span>Network problem</span><i>·</i><span>Bill shock</span><i>·</i>
+    <span>Package too big</span><i>·</i><span>Package too small</span><i>·</i><span>Competitor offer</span><i>·</i><span>Losing interest</span><i>·</i>
+    <span>Network problem</span><i>·</i><span>Bill shock</span><i>·</i>
+    <span>Package too big</span><i>·</i><span>Package too small</span><i>·</i><span>Competitor offer</span><i>·</i><span>Losing interest</span><i>·</i>
+  </div>
+</div>
+
+<!-- ------------------------------------------------------------ stats -->
+<section class="tight">
+  <div class="wrap">
+    <div class="stats rv">
+      <div class="stat"><div class="stat-n mono" id="stat-high" data-count="0">0</div>
+        <div class="stat-l">customers drifting away</div></div>
+      <div class="stat"><div class="stat-n mono" id="stat-rev" data-count="0" data-prefix="Rs. ">Rs. 0</div>
+        <div class="stat-l">monthly revenue at risk</div></div>
+      <div class="stat"><div class="stat-n mono" data-count="4">0</div>
+        <div class="stat-l">reasons, each with its own fix</div></div>
+      <div class="stat"><div class="stat-n mono" data-count="3">0</div>
+        <div class="stat-l">languages: Sinhala, Tamil, English</div></div>
+    </div>
+  </div>
+</section>
+
+<!-- -------------------------------------------------------------- how -->
+<section id="how">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <h2>One discount cannot fix<br>four different problems</h2>
+      <p>A customer leaving because the signal drops in Jaffna will take your free data
+         and leave anyway. StaySignal works out which problem it actually is, then acts.</p>
+    </div>
+
+    <div class="steps rv">
+      <div class="step">
+        <svg class="step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M2 12h3l2.5-7 4 14L14 9l2 3h6"/>
+        </svg>
+        <div class="step-n mono">01</div><h3>Detect</h3>
+        <p>A trained model scores every customer 0–100 on the chance they go silent
+           within 30 days, from reload gaps, data use and app activity.</p>
+      </div>
+      <div class="step">
+        <svg class="step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <circle cx="11" cy="11" r="7"/><path d="M16.5 16.5 21 21"/><path d="M11 8v6M8 11h6"/>
+        </svg>
+        <div class="step-n mono">02</div><h3>Diagnose</h3>
+        <p>It names the likely reason: a fault on their own tower, bill shock,
+           a package too big or too small for them, a rival's promotion in their
+           district, or plain loss of interest.</p>
+      </div>
+      <div class="step">
+        <svg class="step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 11.5 21 3l-8.5 18-2-7.5-7.5-2Z"/>
+        </svg>
+        <div class="step-n mono">03</div><h3>Act</h3>
+        <p>The offer is chosen to match the reason and written as an SMS in Sinhala,
+           Tamil or English — whichever that customer actually uses.</p>
+      </div>
+      <div class="step">
+        <svg class="step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
+        </svg>
+        <div class="step-n mono">04</div><h3>Track</h3>
+        <p>The console counts who stayed and the rupees that stayed with them, so
+           retention carries a number Hutch can check.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ---------------------------------------------------------- console -->
+<section id="console">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <h2>The console</h2>
+      <p>Every score below is computed in your browser as you click — the weights are
+         loaded from <span class="mono hl">models/model.json</span> and applied live.</p>
+    </div>
+
+    <div class="console rv">
+      <div class="console-bar">
+        <span class="dots"><i></i><i></i><i></i></span>
+        <span class="console-title">Retention console · 150 practice customers</span>
+        <span class="live"><i></i> model running</span>
+      </div>
+
+      <div class="kpis">
+        <div class="kpi"><div class="kpi-l">Watched</div>
+          <div class="kpi-v mono" id="kpi-total" data-count="0">0</div></div>
+        <div class="kpi"><div class="kpi-l">Above alert line</div>
+          <div class="kpi-v mono risk" id="kpi-high" data-count="0">0</div></div>
+        <div class="kpi"><div class="kpi-l">Revenue at risk / month</div>
+          <div class="kpi-v mono risk" id="kpi-rev" data-count="0" data-prefix="Rs. ">Rs. 0</div></div>
+        <div class="kpi"><div class="kpi-l">Reasons found</div>
+          <div class="kpi-v mono">4</div></div>
+      </div>
+
+      <div class="panel-row">
+        <div class="panel">
+          <div class="panel-h">Where they're going quiet</div>
+          <div class="map-wrap"><svg class="map" id="map"></svg></div>
+          <p class="hint">Tap a town to filter the list</p>
+        </div>
+        <div class="panel">
+          <div class="panel-h">Why they're drifting</div>
+          <div id="cause-bars" style="margin-bottom:30px"></div>
+          <div class="panel-h">Worst towns this week</div>
+          <div id="town-bars"></div>
+        </div>
+      </div>
+
+      <div class="demo-strip">
+        <span class="demo-l">Demo cases</span>
+        <button class="case" data-case="Network problem"><i></i>Network problem</button>
+        <button class="case" data-case="Bill shock"><i></i>Bill shock</button>
+        <button class="case" data-case="Plan too big"><i></i>Package too big</button>
+        <button class="case" data-case="Losing interest"><i></i>Losing interest</button>
+        <button class="case compare" id="compare">Compare all four &rarr;</button>
+      </div>
+
+      <div class="filters">
+        <button class="chip on" data-cause="all">All</button>
+        <button class="chip" data-cause="Network problem">Network problem</button>
+        <button class="chip" data-cause="Bill shock">Bill shock</button>
+        <button class="chip" data-cause="Plan too big">Plan too big</button>
+        <button class="chip" data-cause="Plan too small">Plan too small</button>
+        <button class="chip" data-cause="Competitor offer">Competitor offer</button>
+        <button class="chip" data-cause="Losing interest">Losing interest</button>
+        <span class="mono list-count" id="list-count"></span>
+      </div>
+
+      <div class="list" id="list"></div>
+
+      <div class="detail-empty" id="detail">Select a customer to see why the model scored them.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ------------------------------------------------------------ model -->
+<section id="model">
+  <div class="wrap">
+    <div class="sec-head rv">
+      <h2>Why the model is<br>a simple one</h2>
+      <p>The challenge requires the system to explain its decisions. A linear model makes
+         that exact rather than approximate — a customer's risk is literally the sum of each
+         feature's weighted contribution, which is what the panel above shows.</p>
+    </div>
+
+    <div class="model-grid rv">
+      <div class="card">
+        <h3>What it learned</h3>
+        <p class="card-p">Weights from logistic regression trained on 4,000 customers with 26 weeks of history each, labelled
+           customers. Orange raises risk, grey lowers it.</p>
+        <div id="weights"></div>
+      </div>
+
+      <div class="card">
+        <h3>How well it works</h3>
+        <p class="card-p">Measured on a held-out test set the model never saw in training.</p>
+        <div class="metrics">
+          <div class="metric"><div class="metric-v mono" id="model-auc">—</div>
+            <div class="metric-l">ROC AUC</div></div>
+          <div class="metric"><div class="metric-v mono">50%</div>
+            <div class="metric-l">of leavers caught</div></div>
+          <div class="metric"><div class="metric-v mono" id="model-thresh">—</div>
+            <div class="metric-l">alert threshold</div></div>
+        </div>
+
+        <h3 style="margin-top:32px">Tuned for money, not accuracy</h3>
+        <p class="card-p">A retention offer gives away real margin, including to customers
+           who were never going to leave. So the alert line is set where revenue is best
+           protected — not where accuracy peaks.</p>
+        <table class="facts" style="margin-top:16px">
+          <tr><td>Contact nobody</td><td class="num mono">Rs. 1,614,006 lost</td></tr>
+          <tr><td>Contact everybody</td><td class="num mono">Rs. 2,324,699 lost</td></tr>
+          <tr><td><b class="on-text">Contact who the model flags</b></td>
+              <td class="num mono" style="color:var(--risk)">Rs. 1,517,559 lost</td></tr>
+        </table>
+        <p class="card-p" style="margin-top:14px">
+          Blanket discounting is worse than doing nothing. That is the argument for this
+          project in one line.</p>
+      </div>
+    </div>
+
+    <div class="card rv" style="margin-top:16px">
+      <h3>Honest about where we are</h3>
+      <p class="card-p">The model is trained on simulated data, because the competition
+         dataset had not been released when this was built. The pipeline is written so only
+         the input file changes when it arrives. The offer cost and save rate are stated
+         assumptions, not measured values — an A/B test would replace them.</p>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap foot-in">
+    <span>StaySignal</span>
+    <span>IgnitX by Hutch 2026 · Track B · Challenge 4.2.3</span>
+    <span>University of Sri Jayewardenepura</span>
+  </div>
+</footer>
+
+<script src="data.js"></script>
+<script src="app.js"></script>
+</body>
+</html>

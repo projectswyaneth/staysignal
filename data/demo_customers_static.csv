@@ -1,0 +1,151 @@
+customer_id,region,home_cell,language,plan,data_quota_gb,monthly_spend_lkr,months_with_hutch,overage_charges_lkr,complaints_last_month,_hidden_profile,_hidden_mobility,_hidden_price_sensitive,_hidden_promo_exposure,churned_next_30d
+HUT100000,Trincomalee,TRI_08,Tamil,Value 15GB,15,1260,59,0.0,0,healthy,static,1,0.05,0
+HUT100001,Trincomalee,TRI_12,Sinhala,Max 40GB,40,1926,25,0.0,1,network,static,1,0.05,1
+HUT100002,Jaffna,JAF_05,English,Max 40GB,40,2234,68,0.0,0,traveller,commuter,1,0.05,0
+HUT100003,Colombo,COL_06,English,Lite 5GB,5,518,9,0.0,0,healthy,commuter,0,0.05,0
+HUT100004,Matara,MAT_08,Sinhala,Max 40GB,40,1816,20,273.0,0,bill_shock,static,1,0.05,0
+HUT100005,Gampaha,GAM_02,Sinhala,Unlimited,100,3069,45,0.0,0,network,roamer,0,0.552,0
+HUT100006,Negombo,NEG_12,Sinhala,Value 15GB,15,1027,8,0.0,0,healthy,commuter,1,0.552,0
+HUT100007,Batticaloa,BAT_02,English,Lite 5GB,5,463,49,0.0,0,healthy,commuter,1,0.05,0
+HUT100008,Kandy,KAN_05,Sinhala,Value 15GB,15,953,43,625.0,0,bill_shock,static,1,0.552,0
+HUT100009,Kandy,KAN_07,English,Lite 5GB,5,487,35,0.0,0,healthy,static,0,0.552,0
+HUT100010,Kandy,KAN_10,Sinhala,Lite 5GB,5,550,61,804.0,0,bill_shock,commuter,1,0.552,0
+HUT100011,Matara,MAT_02,English,Lite 5GB,5,455,45,0.0,0,plan_too_big,commuter,0,0.05,0
+HUT100012,Galle,GAL_03,English,Value 15GB,15,980,18,0.0,0,plan_too_big,commuter,1,0.05,0
+HUT100013,Anuradhapura,ANU_11,Sinhala,Unlimited,100,2891,47,0.0,0,bored,commuter,0,0.05,1
+HUT100014,Galle,GAL_07,Sinhala,Lite 5GB,5,568,15,0.0,0,bored,static,0,0.05,0
+HUT100015,Negombo,NEG_08,Sinhala,Value 15GB,15,1216,3,0.0,0,healthy,static,1,0.552,0
+HUT100016,Matara,MAT_05,English,Unlimited,100,3528,30,0.0,0,traveller,commuter,1,0.05,0
+HUT100017,Kurunegala,KUR_03,Sinhala,Lite 5GB,5,505,71,0.0,0,healthy,static,1,0.552,0
+HUT100018,Gampaha,GAM_04,Sinhala,Lite 5GB,5,618,29,0.0,0,plan_too_big,static,0,0.552,0
+HUT100019,Batticaloa,BAT_01,English,Value 15GB,15,968,16,854.0,0,bill_shock,static,0,0.05,1
+HUT100020,Negombo,NEG_12,Sinhala,Lite 5GB,5,582,19,0.0,0,healthy,static,0,0.552,0
+HUT100021,Negombo,NEG_10,English,Lite 5GB,5,533,24,0.0,0,plan_too_big,static,1,0.552,0
+HUT100022,Negombo,NEG_06,English,Unlimited,100,3429,59,0.0,0,healthy,commuter,0,0.552,0
+HUT100023,Trincomalee,TRI_06,Tamil,Max 40GB,40,1737,63,0.0,0,healthy,commuter,1,0.05,0
+HUT100024,Colombo,COL_05,English,Max 40GB,40,2085,12,0.0,0,plan_too_small,static,1,0.05,0
+HUT100025,Matara,MAT_07,Sinhala,Max 40GB,40,1660,29,0.0,0,network,commuter,0,0.05,1
+HUT100026,Gampaha,GAM_07,Sinhala,Value 15GB,15,910,25,0.0,0,plan_too_small,static,0,0.552,0
+HUT100027,Gampaha,GAM_10,English,Value 15GB,15,1239,72,0.0,0,healthy,static,1,0.552,0
+HUT100028,Anuradhapura,ANU_03,Sinhala,Max 40GB,40,2100,34,0.0,0,bored,static,0,0.05,0
+HUT100029,Gampaha,GAM_03,Sinhala,Lite 5GB,5,509,46,0.0,0,healthy,static,0,0.552,0
+HUT100030,Trincomalee,TRI_08,Tamil,Lite 5GB,5,483,22,0.0,0,plan_too_big,commuter,1,0.05,0
+HUT100031,Anuradhapura,ANU_01,English,Value 15GB,15,1080,16,0.0,0,healthy,roamer,1,0.05,0
+HUT100032,Ratnapura,RAT_09,Sinhala,Value 15GB,15,945,17,0.0,0,healthy,commuter,0,0.05,0
+HUT100033,Negombo,NEG_03,Sinhala,Value 15GB,15,1161,4,0.0,0,healthy,static,1,0.552,0
+HUT100034,Trincomalee,TRI_11,Sinhala,Value 15GB,15,1255,12,0.0,2,network,commuter,0,0.05,1
+HUT100035,Batticaloa,BAT_09,Tamil,Unlimited,100,2931,58,0.0,0,healthy,static,0,0.05,0
+HUT100036,Ratnapura,RAT_06,Sinhala,Lite 5GB,5,492,33,578.0,0,bill_shock,commuter,0,0.05,0
+HUT100037,Gampaha,GAM_07,Sinhala,Max 40GB,40,1875,50,0.0,0,plan_too_small,static,1,0.552,0
+HUT100038,Negombo,NEG_01,Sinhala,Unlimited,100,2948,58,0.0,0,healthy,static,0,0.552,0
+HUT100039,Gampaha,GAM_07,Sinhala,Lite 5GB,5,501,39,0.0,0,healthy,static,0,0.552,0
+HUT100040,Jaffna,JAF_01,Tamil,Max 40GB,40,2096,42,0.0,0,plan_too_small,roamer,0,0.05,1
+HUT100041,Kurunegala,KUR_11,Sinhala,Value 15GB,15,1052,19,0.0,0,bored,roamer,0,0.552,1
+HUT100042,Trincomalee,TRI_01,English,Value 15GB,15,1111,68,0.0,0,healthy,static,0,0.05,0
+HUT100043,Jaffna,JAF_10,Tamil,Max 40GB,40,2273,15,0.0,0,healthy,static,0,0.05,0
+HUT100044,Ratnapura,RAT_04,Sinhala,Lite 5GB,5,456,53,0.0,0,healthy,static,0,0.05,0
+HUT100045,Batticaloa,BAT_10,Tamil,Value 15GB,15,915,7,0.0,0,healthy,commuter,0,0.05,0
+HUT100046,Kurunegala,KUR_11,Sinhala,Value 15GB,15,1132,71,0.0,0,healthy,static,1,0.552,0
+HUT100047,Colombo,COL_03,English,Lite 5GB,5,488,62,209.0,0,bill_shock,static,0,0.05,0
+HUT100048,Gampaha,GAM_10,English,Lite 5GB,5,485,31,0.0,0,bored,static,0,0.552,0
+HUT100049,Galle,GAL_09,English,Value 15GB,15,1186,52,0.0,0,healthy,commuter,0,0.05,0
+HUT100050,Galle,GAL_08,Sinhala,Lite 5GB,5,567,9,0.0,0,bored,roamer,1,0.05,1
+HUT100051,Negombo,NEG_03,English,Value 15GB,15,1028,31,0.0,0,network,commuter,0,0.552,1
+HUT100052,Kurunegala,KUR_05,English,Unlimited,100,3876,48,0.0,0,healthy,static,1,0.552,0
+HUT100053,Matara,MAT_11,Sinhala,Value 15GB,15,1015,29,0.0,0,traveller,commuter,1,0.05,0
+HUT100054,Trincomalee,TRI_11,Sinhala,Lite 5GB,5,600,29,0.0,2,network,commuter,1,0.05,1
+HUT100055,Kandy,KAN_12,Sinhala,Value 15GB,15,1161,64,459.0,1,bill_shock,static,1,0.552,0
+HUT100056,Negombo,NEG_02,English,Max 40GB,40,2171,25,0.0,0,healthy,commuter,1,0.552,0
+HUT100057,Kurunegala,KUR_12,Sinhala,Lite 5GB,5,502,10,0.0,0,healthy,commuter,1,0.552,0
+HUT100058,Colombo,COL_02,Tamil,Lite 5GB,5,567,36,0.0,0,healthy,commuter,1,0.05,0
+HUT100059,Batticaloa,BAT_12,English,Lite 5GB,5,515,31,0.0,0,traveller,roamer,0,0.05,0
+HUT100060,Matara,MAT_06,Sinhala,Unlimited,100,3567,46,0.0,0,healthy,commuter,1,0.05,0
+HUT100061,Batticaloa,BAT_07,Tamil,Unlimited,100,3344,39,0.0,0,plan_too_small,commuter,1,0.05,0
+HUT100062,Galle,GAL_12,Sinhala,Max 40GB,40,1792,28,0.0,0,bored,static,0,0.05,1
+HUT100063,Galle,GAL_01,English,Value 15GB,15,1181,65,0.0,0,bored,static,0,0.05,0
+HUT100064,Ratnapura,RAT_02,Sinhala,Value 15GB,15,1086,42,0.0,0,plan_too_small,static,0,0.05,0
+HUT100065,Anuradhapura,ANU_02,Sinhala,Max 40GB,40,2273,18,0.0,0,healthy,commuter,0,0.05,0
+HUT100066,Jaffna,JAF_04,Tamil,Lite 5GB,5,491,57,0.0,0,traveller,static,1,0.05,0
+HUT100067,Jaffna,JAF_03,Tamil,Max 40GB,40,2109,53,0.0,0,traveller,roamer,0,0.05,0
+HUT100068,Kandy,KAN_05,English,Lite 5GB,5,564,49,0.0,0,healthy,static,1,0.552,0
+HUT100069,Gampaha,GAM_02,Sinhala,Max 40GB,40,2322,59,0.0,0,plan_too_big,commuter,0,0.552,0
+HUT100070,Negombo,NEG_08,Sinhala,Value 15GB,15,1001,59,0.0,0,healthy,commuter,0,0.552,0
+HUT100071,Trincomalee,TRI_09,Sinhala,Lite 5GB,5,573,39,0.0,0,healthy,commuter,0,0.05,0
+HUT100072,Gampaha,GAM_04,Sinhala,Lite 5GB,5,488,9,0.0,0,healthy,static,0,0.552,0
+HUT100073,Kurunegala,KUR_09,Sinhala,Lite 5GB,5,629,33,0.0,0,healthy,static,0,0.552,0
+HUT100074,Gampaha,GAM_11,English,Value 15GB,15,1101,37,0.0,0,healthy,commuter,1,0.552,0
+HUT100075,Gampaha,GAM_11,English,Value 15GB,15,1183,54,0.0,0,plan_too_small,commuter,1,0.552,0
+HUT100076,Trincomalee,TRI_08,Sinhala,Value 15GB,15,1044,60,0.0,0,healthy,commuter,0,0.05,0
+HUT100077,Gampaha,GAM_01,Sinhala,Value 15GB,15,1193,57,725.0,1,bill_shock,commuter,0,0.552,0
+HUT100078,Kandy,KAN_02,Sinhala,Unlimited,100,3578,5,0.0,0,bored,commuter,1,0.552,0
+HUT100079,Batticaloa,BAT_07,Tamil,Max 40GB,40,1931,8,0.0,0,bored,static,0,0.05,0
+HUT100080,Kurunegala,KUR_05,Sinhala,Lite 5GB,5,533,69,0.0,0,plan_too_small,roamer,1,0.552,0
+HUT100081,Matara,MAT_08,Sinhala,Lite 5GB,5,459,56,0.0,0,healthy,commuter,0,0.05,0
+HUT100082,Trincomalee,TRI_01,Tamil,Max 40GB,40,2258,2,0.0,0,healthy,commuter,0,0.05,0
+HUT100083,Kandy,KAN_01,Sinhala,Value 15GB,15,952,48,0.0,0,traveller,static,1,0.552,0
+HUT100084,Galle,GAL_03,English,Max 40GB,40,1647,40,0.0,0,plan_too_big,commuter,1,0.05,1
+HUT100085,Jaffna,JAF_06,English,Unlimited,100,2886,37,0.0,0,healthy,commuter,1,0.05,0
+HUT100086,Kandy,KAN_03,Sinhala,Value 15GB,15,1115,2,0.0,0,healthy,commuter,0,0.552,0
+HUT100087,Anuradhapura,ANU_08,Sinhala,Unlimited,100,3294,24,0.0,0,plan_too_big,commuter,0,0.05,0
+HUT100088,Ratnapura,RAT_12,Sinhala,Max 40GB,40,1857,55,896.0,1,bill_shock,commuter,0,0.05,1
+HUT100089,Jaffna,JAF_11,English,Unlimited,100,3037,15,0.0,0,healthy,roamer,0,0.05,0
+HUT100090,Ratnapura,RAT_01,Sinhala,Value 15GB,15,1103,11,0.0,0,healthy,static,1,0.05,0
+HUT100091,Galle,GAL_10,Sinhala,Value 15GB,15,990,53,678.0,0,bill_shock,commuter,0,0.05,0
+HUT100092,Negombo,NEG_03,Sinhala,Value 15GB,15,1195,22,435.0,1,bill_shock,commuter,0,0.552,1
+HUT100093,Batticaloa,BAT_09,Tamil,Lite 5GB,5,514,4,385.0,0,bill_shock,static,0,0.05,0
+HUT100094,Anuradhapura,ANU_06,English,Value 15GB,15,949,68,0.0,0,network,static,1,0.05,0
+HUT100095,Kandy,KAN_03,English,Max 40GB,40,2284,41,0.0,0,healthy,static,1,0.552,0
+HUT100096,Negombo,NEG_04,Sinhala,Lite 5GB,5,575,61,0.0,0,healthy,static,0,0.552,0
+HUT100097,Negombo,NEG_03,Sinhala,Max 40GB,40,1740,44,767.0,1,bill_shock,commuter,0,0.552,1
+HUT100098,Batticaloa,BAT_02,Tamil,Lite 5GB,5,456,63,0.0,0,plan_too_big,roamer,0,0.05,0
+HUT100099,Ratnapura,RAT_04,Sinhala,Value 15GB,15,963,25,0.0,0,healthy,commuter,0,0.05,0
+HUT100100,Kandy,KAN_11,English,Lite 5GB,5,556,46,396.0,0,bill_shock,commuter,1,0.552,1
+HUT100101,Kandy,KAN_11,Sinhala,Unlimited,100,2770,25,0.0,0,traveller,commuter,0,0.552,0
+HUT100102,Ratnapura,RAT_09,English,Unlimited,100,3103,70,0.0,0,healthy,static,0,0.05,0
+HUT100103,Batticaloa,BAT_09,Tamil,Unlimited,100,2847,7,0.0,0,bored,static,0,0.05,1
+HUT100104,Trincomalee,TRI_03,Tamil,Lite 5GB,5,606,3,0.0,0,healthy,commuter,1,0.05,0
+HUT100105,Jaffna,JAF_08,English,Max 40GB,40,2073,66,0.0,0,plan_too_big,commuter,1,0.05,0
+HUT100106,Trincomalee,TRI_04,Tamil,Max 40GB,40,1700,29,356.0,0,bill_shock,commuter,0,0.05,0
+HUT100107,Jaffna,JAF_05,Tamil,Max 40GB,40,1726,27,0.0,0,traveller,commuter,0,0.05,0
+HUT100108,Trincomalee,TRI_05,Tamil,Max 40GB,40,1751,51,0.0,0,healthy,commuter,0,0.05,0
+HUT100109,Negombo,NEG_03,Sinhala,Max 40GB,40,1913,15,0.0,0,bored,commuter,0,0.552,1
+HUT100110,Ratnapura,RAT_10,English,Value 15GB,15,1116,49,0.0,0,plan_too_big,commuter,1,0.05,0
+HUT100111,Galle,GAL_09,Sinhala,Max 40GB,40,1812,46,0.0,0,healthy,commuter,0,0.05,0
+HUT100112,Ratnapura,RAT_02,Sinhala,Value 15GB,15,1144,33,0.0,0,healthy,static,0,0.05,0
+HUT100113,Colombo,COL_10,Tamil,Unlimited,100,3742,59,0.0,0,network,static,1,0.05,1
+HUT100114,Gampaha,GAM_01,Sinhala,Value 15GB,15,1038,53,0.0,0,healthy,static,0,0.552,0
+HUT100115,Gampaha,GAM_09,Sinhala,Value 15GB,15,921,47,0.0,0,plan_too_big,commuter,1,0.552,1
+HUT100116,Ratnapura,RAT_10,English,Unlimited,100,3112,23,0.0,0,plan_too_big,commuter,0,0.05,0
+HUT100117,Kurunegala,KUR_09,English,Lite 5GB,5,635,38,0.0,0,traveller,commuter,1,0.552,0
+HUT100118,Kandy,KAN_10,English,Max 40GB,40,2011,48,0.0,0,network,commuter,0,0.552,0
+HUT100119,Trincomalee,TRI_12,Tamil,Lite 5GB,5,481,56,0.0,0,healthy,static,1,0.05,1
+HUT100120,Anuradhapura,ANU_10,English,Lite 5GB,5,530,49,0.0,0,plan_too_small,commuter,0,0.05,0
+HUT100121,Kurunegala,KUR_04,Sinhala,Max 40GB,40,2250,25,0.0,0,healthy,commuter,0,0.552,0
+HUT100122,Negombo,NEG_04,English,Max 40GB,40,1785,63,0.0,1,network,commuter,0,0.552,1
+HUT100123,Kandy,KAN_07,Sinhala,Value 15GB,15,1156,35,446.0,0,bill_shock,commuter,0,0.552,1
+HUT100124,Trincomalee,TRI_01,Sinhala,Lite 5GB,5,568,15,0.0,0,plan_too_small,commuter,0,0.05,0
+HUT100125,Batticaloa,BAT_07,Tamil,Value 15GB,15,1108,19,0.0,0,healthy,commuter,0,0.05,0
+HUT100126,Batticaloa,BAT_01,Tamil,Value 15GB,15,1242,31,0.0,0,healthy,commuter,0,0.05,0
+HUT100127,Batticaloa,BAT_04,Tamil,Lite 5GB,5,474,19,565.0,0,bill_shock,commuter,1,0.05,1
+HUT100128,Jaffna,JAF_02,Tamil,Lite 5GB,5,472,63,0.0,0,bored,static,0,0.05,0
+HUT100129,Gampaha,GAM_01,Sinhala,Value 15GB,15,1085,21,0.0,0,plan_too_big,commuter,0,0.552,0
+HUT100130,Kandy,KAN_06,Sinhala,Lite 5GB,5,532,69,0.0,0,healthy,static,0,0.552,0
+HUT100131,Kurunegala,KUR_02,English,Max 40GB,40,1976,54,0.0,0,healthy,roamer,0,0.552,0
+HUT100132,Gampaha,GAM_09,Sinhala,Lite 5GB,5,463,2,0.0,0,healthy,commuter,0,0.552,0
+HUT100133,Kurunegala,KUR_06,English,Value 15GB,15,1029,44,0.0,0,bored,commuter,0,0.552,0
+HUT100134,Anuradhapura,ANU_10,Sinhala,Value 15GB,15,1002,71,226.0,0,bill_shock,commuter,0,0.05,0
+HUT100135,Galle,GAL_03,English,Max 40GB,40,2255,33,0.0,0,plan_too_big,commuter,0,0.05,0
+HUT100136,Gampaha,GAM_01,English,Lite 5GB,5,626,33,0.0,0,healthy,commuter,0,0.552,0
+HUT100137,Kurunegala,KUR_10,Sinhala,Value 15GB,15,1030,46,0.0,0,healthy,static,0,0.552,0
+HUT100138,Matara,MAT_09,English,Value 15GB,15,1260,7,0.0,0,plan_too_small,commuter,0,0.05,0
+HUT100139,Ratnapura,RAT_05,Sinhala,Max 40GB,40,2260,54,0.0,0,traveller,static,1,0.05,0
+HUT100140,Ratnapura,RAT_08,English,Max 40GB,40,1780,38,0.0,0,healthy,static,1,0.05,0
+HUT100141,Kurunegala,KUR_06,English,Value 15GB,15,1228,26,0.0,0,healthy,static,1,0.552,0
+HUT100142,Trincomalee,TRI_06,Tamil,Value 15GB,15,1257,11,0.0,0,healthy,roamer,0,0.05,0
+HUT100143,Anuradhapura,ANU_08,English,Value 15GB,15,1099,22,0.0,0,traveller,commuter,1,0.05,0
+HUT100144,Gampaha,GAM_10,Sinhala,Unlimited,100,3347,71,0.0,0,plan_too_big,commuter,1,0.552,0
+HUT100145,Galle,GAL_03,English,Value 15GB,15,1103,26,0.0,0,bored,static,0,0.05,1
+HUT100146,Negombo,NEG_04,English,Lite 5GB,5,599,11,0.0,0,network,roamer,0,0.552,1
+HUT100147,Gampaha,GAM_06,Sinhala,Lite 5GB,5,579,18,0.0,0,plan_too_small,commuter,0,0.552,0
+HUT100148,Kurunegala,KUR_06,Sinhala,Max 40GB,40,2018,17,0.0,0,plan_too_small,static,0,0.552,0
+HUT100149,Negombo,NEG_11,Sinhala,Value 15GB,15,1119,32,0.0,0,network,commuter,0,0.552,1
