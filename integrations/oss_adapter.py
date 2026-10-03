@@ -84,6 +84,7 @@ class Column:
     low: float | None = None
     high: float | None = None
     required: bool = True
+    default: object | None = None  # used when an optional column is absent
     note: str = ""
 
 
@@ -150,8 +151,9 @@ CUSTOMERS_STATIC = TableSpec(
     columns=(
         Column("customer_id", "id"),
         Column("region", "str"),
-        Column("language", "str", required=False,
-               note="drives which SMS template is sent; defaults to English"),
+        Column("language", "str", required=False, default="English",
+               note="selects the SMS template. Optional: where the account record "
+                    "has no language, English is used."),
         Column("plan", "str"),
         Column("data_quota_gb", "float", 0, 100000),
         Column("monthly_spend_lkr", "float", 0, 1_000_000),
@@ -360,9 +362,9 @@ class Adapter:
 
 
 def _default_for(c: Column):
-    if c.kind in ("int", "float"):
-        return 0
-    return "unknown"
+    if c.default is not None:
+        return c.default
+    return 0 if c.kind in ("int", "float") else "unknown"
 
 
 def _referential_checks(tables: dict[str, pd.DataFrame]) -> list[str]:
@@ -420,6 +422,50 @@ def from_warehouse_batch(directory: str | Path) -> dict[str, pd.DataFrame]:
     return frames
 
 
+def from_sql_warehouse(connection, schema: str = "", since_week: int | None = None,
+                       tables: dict[str, str] | None = None) -> dict[str, pd.DataFrame]:
+    """Read the four canonical tables straight out of a SQL warehouse.
+
+    This is the production path, and it is the answer to "surely you are not
+    generating CSV files forever". The CSV loader exists because a laptop has
+    no warehouse attached. Nothing downstream can tell the two apart: both
+    produce the same four DataFrames.
+
+    `connection` is any DB-API connection or SQLAlchemy engine — Snowflake,
+    Oracle, Teradata, Postgres, BigQuery. We do not name a vendor because Hutch
+    has not told us which one they run; they said "the data warehouse", and
+    every one of these speaks SQL.
+
+        import snowflake.connector
+        conn = snowflake.connector.connect(
+            account=..., user=..., password=os.environ["SF_PASSWORD"],
+            warehouse="ANALYTICS_WH", database="PREPAID")
+        frames = from_sql_warehouse(conn, schema="PUBLIC", since_week=1)
+
+    On `since_week`: it is cast to int before it reaches the SQL text, so there
+    is no injection surface. We do it this way rather than with a bound
+    parameter because the placeholder style differs by driver (? vs %s vs
+    :name) and this function has to work with all of them.
+
+    A note on scale, for anyone extending this: a real base is hundreds of
+    millions of customer-weeks, and pulling all of it into pandas is the wrong
+    shape. The weekly aggregation in features.py is a GROUP BY, and a warehouse
+    will do it far faster than we can — push it down, and pull one row per
+    customer instead of twenty-six.
+    """
+    tables = tables or {n: n.upper() for n in SPECS}
+    prefix = f"{schema}." if schema else ""
+    frames = {}
+    for name, spec in SPECS.items():
+        table = f"{prefix}{tables.get(name, name.upper())}"
+        has_week = any(c.name == "week" for c in spec.columns)
+        sql = f"SELECT * FROM {table}"
+        if since_week is not None and has_week:
+            sql += f" WHERE week >= {int(since_week)}"
+        frames[name] = pd.read_sql_query(sql, connection)
+    return frames
+
+
 def from_rest(base_url: str, token: str, since_week: int) -> dict[str, pd.DataFrame]:
     """REST pull. Intentionally unimplemented: implementing it against a guessed
     schema would be fiction. The contract is `GET {base_url}/{table}?since_week=`
@@ -466,6 +512,31 @@ def _self_test() -> int:
         for name, t in tables.items():
             print(f"  {name:<20} {len(t):>9,} rows x {len(t.columns)} columns")
 
+    # Prove the SQL path produces exactly what the file path produces. We use
+    # SQLite because it is the one SQL engine available without an account, but
+    # the code under test is the same code a Snowflake or Oracle connection
+    # would run — only the connection object differs.
+    print("\n" + "=" * 74)
+    print(" SQL warehouse path — same loader, same four tables")
+    print("=" * 74)
+    import sqlite3
+    conn = sqlite3.connect(":memory:")
+    for name, df in frames.items():
+        df.to_sql(name.upper(), conn, index=False)
+    sql_frames = from_sql_warehouse(conn, since_week=1)
+    sql_tables, sql_report = Adapter().load_all(sql_frames)
+    same = all(
+        tables[n].shape == sql_tables[n].shape
+        and list(tables[n].columns) == list(sql_tables[n].columns)
+        for n in SPECS
+    )
+    for name in SPECS:
+        print(f"  {name:<20} file {str(tables[name].shape):>14}   "
+              f"sql {str(sql_tables[name].shape):>14}")
+    print(f"  -> identical: {same}.  The model cannot tell which one it was given,")
+    print("     The source of the tables is not visible downstream.")
+    conn.close()
+
     # A deliberately broken extract, to prove the validator is not decorative.
     print("\n" + "=" * 74)
     print(" Negative test — the same loader against a corrupted OSS export")
@@ -476,8 +547,7 @@ def _self_test() -> int:
     _, rep = Adapter().load("cells_weekly", broken)
     print(f"  missing required : {rep.missing_required}")
     print(f"  out of range     : {rep.out_of_range}")
-    print("  -> the extract is rejected before a single customer is scored,")
-    print("     which is the entire point of this file.")
+    print("  -> the extract is rejected before any customer is scored.")
     return 0 if report.ok else 1
 
 

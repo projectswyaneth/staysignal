@@ -1,48 +1,39 @@
 """
-StaySignal — feature engineering. The single source of truth.
+Feature engineering for StaySignal — the single definition used everywhere.
 
 train.py, the scoring API and the browser console all build features from this
-one file, so a customer is scored identically everywhere. (Training/serving
-skew is one of the most common ways a working ML system silently breaks.
-Sharing one definition makes it structurally impossible.)
+module, so a customer is scored identically in training and in serving. A second
+implementation would allow the two to drift apart, which is a common and silent
+failure mode in deployed models.
 
------------------------------------------------------------------------------
-ONE IDEA, APPLIED EVERYWHERE
------------------------------------------------------------------------------
-Nothing is ever judged in absolute terms.
+Design principle: no quantity is used in absolute form.
 
-    a customer is compared to their own past
-    a cell       is compared to its own past
-    a week       is compared to what the whole base did that week
-    a traveller  is compared to their own normal travel
+    a customer is measured against their own history
+    a cell       is measured against its own history
+    a week       is measured against the whole base that week
+    mobility     is measured against that customer's own usual mobility
 
-8 GB is a lot for one person and nothing for another. 55% congestion is
-normal for a Colombo cell and alarming for a rural one. Eight districts in a
-week is alarming for an office worker and Tuesday for a sales rep. So every
-feature is a ratio or a delta against the right reference, never a raw level.
+Absolute levels are not comparable across subjects. 8 GB/month is heavy use for
+one subscriber and light for another; 55% PRB utilisation is routine for a dense
+urban cell and abnormal for a rural one; twelve distinct cells per week is
+unusual for an office worker and normal for a field worker. Every feature is
+therefore a ratio or a delta against the appropriate reference.
 
------------------------------------------------------------------------------
-FEATURE FAMILIES — and the judge question each one exists to answer
------------------------------------------------------------------------------
-  A. Behaviour vs the customer's OWN past        the original idea
-  B. Behaviour vs THE WHOLE BASE that week       "what about a holiday dip?"
-  C. Presence and mobility                       "what if they are travelling?"
-                                                 "what about a sales rep who
-                                                  uses different towers daily?"
-  D. Network experience on THEIR OWN cells        "how do you KNOW it is the
-                                                  network?"
-                                                 "what if another operator on a
-                                                  shared tower causes this?"
-  E. Commercial                                  bill shock, tenure, value
-  F. Market context                              "what about Dialog's and
-                                                  Mobitel's promotions?"
+Feature families
+----------------
+  A  behaviour vs the customer's own history
+  B  behaviour vs the whole base that week   (removes seasonality)
+  C  presence and mobility
+  D  network experience on the cells that served them
+  E  commercial attributes
+  F  market context
 
-Three named feature sets are kept so the repository can prove the progression
-rather than assert it:
+Three named feature sets are kept so the effect of each family can be measured
+rather than assumed:
 
-    v1  (4 features)   what we brought to the idea pitch
-    v2  (18 features)  after the first technical panel
-    v3  (23 features)  after the finalist panel  <- deployed
+    v1  (4 features)   behaviour only
+    v2  (18 features)  adds population baseline, presence, network
+    v3  (24 features)  adds own-mobility baselines, interference, market  <- deployed
 """
 import numpy as np
 import pandas as pd
@@ -58,27 +49,27 @@ HOLIDAY_WEEKS = {23, 24}         # a national holiday INSIDE the recent window
 SINR_DB_PER_PRB_POINT = 0.22
 
 
-# --- A: vs their own past ---------------------------------------------------
+# --- A: behaviour vs the customer's own history -----------------------------
 SET_A = ["data_ratio", "opens_ratio", "recharge_ratio", "quota_utilisation"]
 
-# --- B: vs the whole base that week (seasonality cancels out) --------------
+# --- B: behaviour vs the whole base that week (removes seasonality) --------
 SET_B = ["data_ratio_vs_base", "opens_ratio_vs_base"]
 
 # --- C: presence and mobility ---------------------------------------------
 SET_C = ["home_cell_share", "home_share_drop", "weeks_since_attach",
          "regions_seen"]
-SET_C3 = ["home_share_ratio", "mobility_ratio", "regions_ratio"]   # new in v3
+SET_C3 = ["home_share_ratio", "mobility_ratio", "regions_ratio"]   # v3
 
 # --- D: network experience on their own cells -----------------------------
 SET_D = ["cell_drop_delta", "cell_sinr_delta", "cell_congestion",
          "cell_outage_hours"]
-SET_D3 = ["cell_congestion_delta", "cell_interference"]   # new in v3
+SET_D3 = ["cell_congestion_delta", "cell_interference"]   # v3
 
 # --- E: commercial --------------------------------------------------------
 SET_E = ["has_overage", "complaints", "tenure_months", "monthly_spend"]
 
 # --- F: market context ----------------------------------------------------
-SET_F3 = ["market_pressure"]                           # new in v3
+SET_F3 = ["market_pressure"]                           # v3
 
 FEATURE_SETS = {
     "v1": SET_A,
@@ -101,45 +92,42 @@ READABLE = {
     "home_share_ratio":      "Time at home vs own normal",
     "mobility_ratio":        "Towers visited vs own normal",
     "regions_ratio":         "Districts visited vs own normal",
-    "cell_drop_delta":       "Their tower's call drops (vs its own normal)",
+    "cell_drop_delta":       "Their tower's call drops vs its normal",
     "cell_sinr_delta":       "Their tower's signal quality loss",
     "cell_congestion":       "Their tower's congestion",
     "cell_congestion_delta": "Their tower's congestion growth",
-    "cell_interference":     "Signal loss their tower's own load cannot explain",
+    "cell_interference":     "Unexplained signal loss on their tower",
     "cell_outage_hours":     "Their tower's outage hours",
     "has_overage":           "Was charged extra",
     "complaints":            "Complaints last month",
     "tenure_months":         "Months with Hutch",
     "monthly_spend":         "Monthly spend",
-    "market_pressure":       "Competitor campaign pressure in their district",
+    "market_pressure":       "Competitor pressure in their district",
 }
 
 
 # ==========================================================================
-# CELL BASELINES — every cell judged against its own healthy level
+# CELL BASELINES — each cell measured against its own healthy level
 # ==========================================================================
 def cell_baselines(cells_df):
-    """Per-cell condition, each cell compared to ITS OWN past.
+    """Per-cell condition, each cell measured against its own history.
 
-    A cell in a dense city is permanently busier than a rural one. What
-    matters is whether a cell got worse than it normally is.
+    Dense urban cells are permanently busier than rural ones, so only the change
+    relative to a cell's own healthy level is informative.
 
-    This function also separates two causes of bad signal that look identical
-    in a single SINR number, and which need completely different fixes:
+    The function also separates two causes of signal degradation that are
+    indistinguishable in SINR alone and require different remedies:
 
-        PRB up   + SINR down  ->  OUR OWN congestion. Add capacity.
-        PRB flat + SINR down  ->  interference from OUTSIDE our own traffic.
-                                  Towers in Sri Lanka are commonly shared
-                                  between operators, so a neighbouring
-                                  carrier, or a new obstruction, can degrade
-                                  our signal while our own load is unchanged.
-                                  Capacity will not fix it; RF planning and
-                                  inter-operator coordination will.
+        PRB up   + SINR down  ->  congestion from our own traffic. Add capacity.
+        PRB flat + SINR down  ->  degradation our own load does not account for.
+                                  Typical of external interference, including a
+                                  neighbouring operator's carrier on a shared or
+                                  co-located site, or a new obstruction.
+                                  Requires RF planning, not capacity.
 
-    `interference` is the SINR loss that the cell's own extra load cannot
-    account for. It is the honest answer to "what if another operator on the
-    same tower is causing this?" -- we cannot see their traffic, but we can
-    see degradation our traffic does not explain.
+    `interference` is the SINR loss not explained by the cell's own increase in
+    load. Another operator's traffic is not observable to us; degradation our own
+    traffic does not explain is.
     """
     base = cells_df[cells_df.week < BASE_TO].groupby("cell_id").agg(
         base_drop=("call_drop_rate_pct", "median"),
@@ -170,18 +158,18 @@ def cell_baselines(cells_df):
 # POPULATION BASELINE — what the whole base did each week
 # ==========================================================================
 def population_baseline(weekly_df):
-    """The seasonality fix.
+    """Median behaviour of the whole base, per week.
 
-    If everybody's data fell 30% during Avurudu, a customer who fell 30% has
-    told us nothing. Only a fall BEYOND the crowd is a signal.
+    Removes seasonality. If every subscriber's usage falls 30% during a public
+    holiday, a 30% fall carries no information; only a fall beyond the population
+    median does.
 
-    Note what this does NOT fix: it is a NATIONAL median, so it cancels
-    national events (holidays, exam season) but not a regional one -- a
-    competitor running a district-level promotion moves one region and barely
-    moves the national median. That is exactly why family F exists.
+    Scope: this is a NATIONAL median. It cancels national events but not a
+    regional one — a district-level competitor campaign moves one region and
+    barely moves the national median. Family F covers that case.
 
-    In production this is computed nightly and stored, so a single customer
-    can still be scored on demand through the API.
+    In production this is computed once per nightly run and stored, so a single
+    customer can still be scored on demand through the API.
     """
     per_week = weekly_df.groupby("week").agg(
         pop_data=("data_gb", "median"),
@@ -201,22 +189,17 @@ def population_baseline(weekly_df):
 def market_pressure(market_df):
     """Competitive pressure per district over the recent window.
 
-    A judge asked: Dialog or Mobitel runs an aggressive promotion, Hutch
-    customers leave, and nothing about our own network or the customer's own
-    behaviour explains it. Correct -- and no amount of internal data can see
-    it, because the cause is outside Hutch.
+    Churn caused by a rival's promotion has no internal explanation: the cause is
+    outside the operator. It therefore enters as an external input, one row per
+    district per week, built in production from:
 
-    So it is supplied as an EXTERNAL input, one row per district per week.
-    In production it is built from two things Hutch already has or can get:
+      * MNP port-out requests by district and week — measured ground truth for
+        competitive loss, including the receiving operator.
+      * The competitor campaign calendar, which is publicly announced, so start
+        and end dates are known rather than estimated.
 
-      * MNP port-out requests by district and week. This is the ground truth
-        for competitive loss -- Hutch knows exactly who ported out and to whom.
-      * Competitor campaign calendar. Promotions are publicly announced, so
-        start and end dates are known, not guessed.
-
-    It is deliberately NOT learned from our own churn labels. Using outcomes
-    to predict outcomes is leakage; a lagged, externally sourced market index
-    is not.
+    It is deliberately not derived from our own churn labels; using outcomes to
+    predict outcomes is leakage. A lagged, externally sourced index is not.
     """
     if market_df is None or len(market_df) == 0:
         return None
@@ -229,11 +212,10 @@ def market_pressure(market_df):
 # ==========================================================================
 def build_features(weekly_df, static_df, cells_df, market_df=None,
                    pop=None, feature_set="v3"):
-    """Weekly rows -> one row of features per customer.
+    """Weekly rows -> one feature row per customer.
 
-    Always computes every v3 feature, then returns the requested named subset,
-    so v1 / v2 / v3 are guaranteed to be built from identical inputs. That is
-    what makes the comparison in train.py honest.
+    Always computes the full v3 set, then returns the requested named subset, so
+    v1 / v2 / v3 are guaranteed to be built from identical inputs.
     """
     cells = cell_baselines(cells_df)
     if pop is None:
@@ -256,11 +238,11 @@ def build_features(weekly_df, static_df, cells_df, market_df=None,
         b_cells=("distinct_cells", "mean"), b_regions=("distinct_regions", "mean"),
     )
 
-    # the last week we saw them on the network at all
+    # last week the subscriber attached to the network at all
     seen = w[w.attached == 1].groupby("customer_id").week.max()
 
-    # their own towers' condition, averaged over the cells that actually
-    # served them -- not over the whole network
+    # condition of the cells that actually served this subscriber, averaged
+    # over the recent window -- not a network-wide average
     rc = recent.join(cells, on="serving_cell")
     net = rc.groupby("customer_id").agg(
         drop_delta=("drop_delta", "mean"), sinr_delta=("sinr_delta", "mean"),
@@ -279,23 +261,20 @@ def build_features(weekly_df, static_df, cells_df, market_df=None,
     f["recharge_ratio"] = r.r_rec / b.b_rec.clip(lower=0.05)
     f["quota_utilisation"] = (r.r_data * 4.33) / s.data_quota_gb.clip(lower=1)
 
-    # ---- B: vs the whole base that week  (THE SEASONALITY FIX) -----------
+    # ---- B: vs the whole base that week ----------------------------------
     f["data_ratio_vs_base"] = f["data_ratio"] / max(pop["data"], 1e-6)
     f["opens_ratio_vs_base"] = f["opens_ratio"] / max(pop["opens"], 1e-6)
 
-    # ---- C: presence and mobility  (THE TRAVELLER FIX) -------------------
+    # ---- C: presence and mobility ----------------------------------------
     f["home_cell_share"] = r.r_home
     f["home_share_drop"] = (b.b_home - r.r_home).clip(lower=0)
     f["weeks_since_attach"] = (WEEKS - seen).reindex(f.index).fillna(WEEKS).clip(upper=12)
     f["regions_seen"] = r.r_regions.reindex(f.index).fillna(1).clip(upper=6)
 
-    # ...and the same signals measured against THEIR OWN normal.
-    # A sales rep who always touches ten towers in three districts, and whose
-    # busiest single tower only ever holds a quarter of his sessions, is not
-    # travelling - that is his Tuesday. An office worker who always touches two
-    # towers and suddenly touches ten IS travelling. The absolute counts cannot
-    # tell those two apart; the ratios can, because each person is measured
-    # against themselves.
+    # The same signals measured against each customer's own usual mobility.
+    # Absolute counts cannot distinguish a habitually high-mobility subscriber
+    # (field staff, drivers) from one who has temporarily left their usual
+    # footprint; ratios against the subscriber's own baseline can.
     f["home_share_ratio"] = (r.r_home / b.b_home.clip(lower=0.02)).clip(upper=3)
     f["mobility_ratio"] = (r.r_cells / b.b_cells.clip(lower=0.5)).clip(upper=6)
     f["regions_ratio"] = (r.r_regions / b.b_regions.clip(lower=0.5)).clip(upper=6)
@@ -324,35 +303,47 @@ def build_features(weekly_df, static_df, cells_df, market_df=None,
 
 
 # ==========================================================================
-# SUPPRESSION — flagged is not the same as contacted
+# SUPPRESSION — a high score is not by itself an instruction to spend
 # ==========================================================================
-# A high score says "this customer's experience is degrading". It does NOT
-# automatically mean "spend money on them today".
+# A high score indicates a degrading customer experience. Whether to act on it
+# is a commercial decision, so these are rules rather than learned weights: the
+# operator must be able to change retention policy without retraining a model,
+# and must be able to explain why a given customer was or was not contacted.
 #
-# These rules are deliberately rules rather than learned weights: they are
-# business policy, and Hutch must be able to change them without retraining
-# anything. A model that cannot be overruled by the business does not get
-# deployed by the business.
-#
-# v2 wrote them against absolute thresholds, and the finalist panel found the
-# flaw: a sales representative legitimately uses many towers in many districts
-# every week, so the v2 rules classified him as permanently "travelling" and
-# held him back forever -- including when he really was leaving. That is a
-# silent false negative, which is worse than a wasted offer because nothing
-# ever surfaces it.
-#
-# v3 rewrites every rule against the customer's OWN mobility baseline.
+# All thresholds are relative. Absolute thresholds misclassify subscribers whose
+# normal footprint is wide — a field worker's share of sessions on his modal cell
+# is permanently low, so an absolute rule marks him as travelling in every week,
+# including weeks in which he is genuinely churning. Suppression produces no
+# alert, so that error is not visible in any accuracy metric; the v2 ruleset is
+# retained below only so the regression test in train.py can quantify it.
 # ==========================================================================
-def suppression(features, pop=None, version="v3"):
-    """Returns a reason to HOLD, or None to contact."""
+def suppression(features, pop=None, version="v3", last_contact_days=None,
+                fatigue_days=30):
+    """Returns a reason to HOLD, or None to contact.
+
+    `last_contact_days` maps customer_id -> days since that customer was last
+    contacted, read from the contact ledger. Where it is absent the fatigue rule
+    cannot fire, which is the case for the simulated data: it contains no
+    campaign history, because no campaign has been run against it.
+    """
     pop_dip = (pop or {}).get("data", 1.0) < 0.85
+    recent = last_contact_days or {}
     out = []
 
-    for _, x in features.iterrows():
+    for cid, x in features.iterrows():
         reason = None
 
+        # Contact fatigue outranks every other rule: whatever else is true about
+        # this customer, sending a second message inside the window makes the
+        # first one less likely to be read, not more.
+        since = recent.get(cid)
+        if since is not None and since < fatigue_days:
+            out.append(f"Contacted {int(since)} days ago - inside the "
+                       f"{fatigue_days}-day window")
+            continue
+
         if version == "v2":
-            # kept so the regression test in train.py can measure the damage
+            # retained for the regression test in train.py
             if x.home_cell_share < 0.35 and x.weeks_since_attach <= 1:
                 reason = "Travelling - still active elsewhere"
             elif x.regions_seen >= 2 and x.home_share_drop > 0.3:
@@ -360,16 +351,15 @@ def suppression(features, pop=None, version="v3"):
             elif pop_dip and x.data_ratio_vs_base > 0.9:
                 reason = "Seasonal - whole base is down this week"
         else:
-            # 1. Away from THEIR OWN usual footprint, and still attaching.
-            #    A ratio, not a level: a rep who normally sits at 0.25 is
-            #    untouched, while an office worker falling from 0.95 to 0.30
-            #    is caught. Both are judged against themselves.
+            # 1. Away from their own usual footprint, and still attaching.
+            #    A ratio, not a level, so a subscriber whose normal share is
+            #    0.25 is unaffected while one falling from 0.95 to 0.30 is not.
             if x.home_share_ratio < 0.5 and x.weeks_since_attach <= 1:
                 reason = "Travelling - away from usual towers, still active"
-            # 2. Covering more districts than they normally do.
+            # 2. Covering more districts than their own usual range.
             elif x.regions_ratio > 1.5 and x.home_share_ratio < 0.8:
                 reason = "Travelling - more districts than their own normal"
-            # 3. A national dip the whole base shares.
+            # 3. A base-wide dip.
             elif pop_dip and x.data_ratio_vs_base > 0.9:
                 reason = "Seasonal - whole base is down this week"
 

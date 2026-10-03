@@ -1,9 +1,9 @@
 """
 StaySignal — scoring API.
 
-The console runs the model in the browser so a judge can see it work with no
-server at all. In production the model belongs behind an API inside Hutch's
-network, and this is that service.
+The browser console scores customers client-side so the prototype can run as a
+static page with no backend. In production the model belongs behind an API
+inside the operator's network; this module is that service.
 
     uvicorn app:app --reload --port 8000      (from the backend/ directory)
     http://localhost:8000/docs                 interactive documentation

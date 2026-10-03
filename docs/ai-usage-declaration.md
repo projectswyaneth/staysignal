@@ -44,6 +44,23 @@ weekly observations per subscriber the relative features already capture the
 shape of the decline, and nothing in the challenge is improved by a model nobody
 in the room can audit.
 
+### Where an LLM *would* help — and where it would not
+
+We are not claiming language models are useless. We are claiming this is not a
+language problem. The distinction is worth setting out, because it is the honest
+version of the answer:
+
+| Task | Right tool | Why |
+|---|---|---|
+| Predicting who goes quiet | **Logistic regression** | Numeric time series. Benchmarked against gradient boosting; the linear model won. |
+| Reading free-text complaint and call-centre notes | **An LLM** | Genuinely a language problem. *Is this customer complaining about coverage, billing or speed?* is a feature we cannot build any other way, and it is the one thing we would add with real data. |
+| Writing SMS variants | An LLM, with human approval | Ours are templates. A model could draft alternatives — but every message sent to a customer would need sign-off, because a hallucinated offer is a legal problem, not a bug. |
+| "Why is Negombo churning this week?" | An LLM over our outputs | A natural-language layer on top of the console. Convenience, not accuracy. |
+
+All three LLM rows are **language** tasks. None of them is the prediction. If we
+were given another month and Hutch's complaint text, the first row is what we
+would build — and it would feed the same logistic regression, not replace it.
+
 ### The commercial consequence
 
 Most LLM-based retention tools cost money every time they look at a customer.

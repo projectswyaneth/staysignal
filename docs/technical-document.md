@@ -179,6 +179,63 @@ Full specification: [integration-hutch.md](integration-hutch.md).
 
 ---
 
+## 4b. Data preparation
+
+A reasonable objection to this repository: the simulator produces clean tables, so
+very little cleaning appears necessary. Real subscriber data is not clean, and the
+preparation step is where most of the work in a deployment actually sits.
+
+Preparation happens in two places, and both already exist.
+
+### In the adapter — before anything is scored
+
+[`integrations/oss_adapter.py`](../integrations/oss_adapter.py) performs:
+
+- **Schema mapping** — the operator's column names to the canonical ones
+- **Unit conversion** — outage seconds to minutes, PRB as a fraction to a percentage
+- **Type coercion** — numeric columns parsed, non-numeric values set to null rather than silently becoming zero
+- **Physical range validation** — a drop rate above 100% or SINR below −20 dB is a broken export, not an outlier, and the load is refused
+- **Missing-column handling** — required columns fail loudly; optional ones take a declared default
+- **Referential checks** — serving cells with no OSS record, subscribers with no weekly history, and subscribers with fewer than 17 weeks, all counted and reported
+- **Null-rate reporting** per column, so a silently degrading feed is visible
+
+### In the feature layer — during construction
+
+[`ml/features.py`](../ml/features.py) performs:
+
+- **Aggregation** to the weekly grain
+- **Division guards** — every denominator is clipped away from zero, so a dormant baseline cannot produce an infinite ratio
+- **Clipping** of each feature to a plausible range, so one extreme subscriber cannot dominate a standardised coefficient
+- **Explicit null filling** after construction
+
+### What a real deployment adds, which our data does not need
+
+Stating these matters, because their absence here is an artefact of the simulator
+rather than a claim that they are unnecessary:
+
+| Step | Why real data needs it |
+|---|---|
+| **De-duplication** | CDR mediation can emit the same session more than once after a retry |
+| **Test and internal SIMs** | Engineering, dealer and corporate test numbers behave nothing like customers and would distort both training and targeting |
+| **Already-churned SIMs** | A number that stopped months ago is not a prediction target; including it inflates measured performance |
+| **SIM swap and number recycling** | The same MSISDN may be two different people across the window. The subscriber key must survive this, or histories merge |
+| **Roaming records** | A subscriber on a partner network abroad is not on a Hutch cell; those weeks need marking, not treating as silence |
+| **Week-boundary alignment** | OSS, CDR and billing systems rarely cut the week at the same moment. Misaligned boundaries shift a customer's "recent window" by days |
+| **Outlier policy** | A tethered router on a consumer plan is a real customer with extreme usage. The relative features absorb much of this, but the policy has to be decided, not assumed |
+| **Class imbalance** | A real monthly churn rate is typically far below the ~18% in our simulation. The threshold is re-optimised on the operator's own base rather than carried over |
+
+The first four are **exclusions**, and each one should be counted and reported, not
+quietly dropped. A pipeline that silently discards 8% of the base is a pipeline
+that will eventually discard the wrong 8%.
+
+### Scale
+
+At tens of millions of subscriber-weeks, this work belongs in the warehouse, not in
+pandas. The exclusions are `WHERE` clauses and the aggregation is a `GROUP BY`; both
+run far faster where the data already sits. The feature definitions do not change —
+only the place the arithmetic happens. See `from_sql_warehouse()` and the pushdown
+note in [integration-hutch.md](integration-hutch.md).
+
 ## 5. Feature engineering
 
 24 features in six families. Three families exist because a judging panel asked a
@@ -334,6 +391,215 @@ assume 35%) and up to a **22.5% offer cost** (we assume 15%). Full grid:
 
 ---
 
+## 7b. Operating model — how this runs without anyone watching
+
+A fair challenge to any retention system: *a prepaid base has millions of
+subscribers. Who sits and reads this screen?*
+
+Nobody. **The system is a scheduled batch job, not an application someone
+operates.** Every night it reads the data, scores the whole base, applies the
+hold rules and produces a ranked queue. No human is involved in any of that, and
+at a million subscribers it is minutes of CPU on one machine.
+
+The console is for **supervision and exception handling**, not for sending. The
+closest analogy is a production line: the line runs itself, and a person watches
+the panel and intervenes when something is off.
+
+### Tiered automation
+
+Actions are released by value and risk, not all by hand:
+
+| Tier | Action | Human involvement |
+|---|---|---|
+| Low-cost standard offers — free night data, a fault notification | Released automatically | None |
+| Plan changes and discounts | Released automatically within a daily budget cap | None unless the cap is reached |
+| Customers above a spend threshold | Queued for review | One agent, tens per day |
+| Network-caused cases | Raised as RF work orders | The network team, not retention |
+| Product gaps (section 7c) | Monthly summary | Product team |
+
+A retention team of three or four people can operate a base of millions this
+way, because they see only the exceptions. The safety limits are already in the
+system: the suppression rules, the 30-day contact-fatigue limit, and a threshold
+tuned on revenue that caps how many customers are contacted at all.
+
+### What is deliberately not automated
+
+- **The policy rules.** Thresholds, budget caps and suppression are configuration
+  a human owns, not parameters the model learns. Retention policy must be
+  changeable without a model release.
+- **Delivery.** StaySignal does not send messages. It produces the decision —
+  which subscriber, which action, which reason, which language — and hands it to
+  the operator's existing messaging platform, which already owns delivery,
+  retries, opt-out and regulatory compliance. Building a second sender would
+  duplicate infrastructure the operator already runs.
+- **Anything above the review threshold.** High-value customers get a human
+  glance. The cost of that review is trivial next to the revenue at stake.
+
+### What automating this does *not* require
+
+It requires a scheduler and a policy layer. It does not require a language model.
+Adding one would introduce a per-customer inference cost, an external dependency,
+and the loss of a complete audit trail for why a given message was sent.
+
+## 7c. End-to-end data flow — from the operator's systems to the customer
+
+The question this section answers: *the repository contains Python that generates
+customers and trains a model. How does the operator's real data get into that,
+and what happens afterwards?*
+
+The simulator exists because no production data is available during the
+hackathon. It occupies exactly one position in the chain, and it is the only
+component that is replaced.
+
+### The chain, in order
+
+| # | Stage | Today | With the operator's data |
+|---|---|---|---|
+| 1 | **Source** | `ml/generate.py` writes four CSV tables | Nightly extract from OSS/NMS, CDR/xDR and the prepaid warehouse |
+| 2 | **Adapter** | reads those files | `from_sql_warehouse()` runs four SQL queries against the warehouse. **No file is involved.** |
+| 3 | **Validation** | same code | same code — rejects the extract if a column is missing, a value is physically impossible, or a join is broken |
+| 4 | **Features** | `ml/features.py` | **unchanged** |
+| 5 | **Training** | `ml/train.py` | **unchanged** — retrained on real labels, producing new weights |
+| 6 | **Model** | `models/model.json` | same file, different numbers |
+| 7 | **Scoring** | browser / `backend/app.py` | the nightly job, or the API |
+| 8 | **Policy** | threshold + suppression | same, with the operator's own economics |
+| 9 | **Action** | console queue | handed to the operator's messaging platform |
+| 10 | **Feedback** | — | outcomes written back, so the next retrain learns from what worked |
+
+**Only stage 1 changes.** Stages 3 to 10 are untouched, and stage 2 is a
+different function in a file already written and tested.
+
+### Two separate flows, which are easy to confuse
+
+**Training** happens occasionally — at setup, then on a schedule (monthly is
+typical) or when performance drifts. It needs history *and outcomes*: who
+actually went silent. It produces `model.json`.
+
+**Scoring** happens every night. It needs only recent history, and it produces a
+ranked queue. It does not retrain anything.
+
+A common misreading of this repository is that the model is retrained before each
+run. It is not. Training is rare; scoring is routine.
+
+### On labels, honestly
+
+Training needs to know who really churned. In the simulator the labels are
+generated. On the operator's data they are defined from their own records — for
+example, a prepaid subscriber with no revenue-generating activity for 30 days —
+and the definition is the operator's to set, because it determines what the model
+is predicting. That definition is the single most important thing to agree before
+a pilot, and it is not a technical decision.
+
+### The customer's journey through the system
+
+Following one subscriber end to end:
+
+1. Their tower degrades, or their bill surprises them, or a rival advertises a
+   cheaper package. They do not complain; they reload less.
+2. That night, their behaviour, their towers' KPIs and their district's market
+   data are extracted and joined.
+3. Their 24 features are built — each one relative to their own history, their
+   towers' own history, and the base that week.
+4. They are scored. Say 82.
+5. Above the alert line, so a cause is attributed: a degraded cell they spent 80%
+   of their time on.
+6. The hold rules check them: at home, attached daily, not seasonal. No hold.
+7. The action is matched to the cause: a fault notification and a repair update,
+   not a discount, plus an RF work order for the tower.
+8. The message is selected in their own language from their account record and
+   handed to the messaging platform.
+9. The outcome is recorded. If they reload again, that becomes a labelled example
+   for the next retrain.
+
+## 7d. What happens when the action does not work
+
+A system that only decides *who to contact* is incomplete. The harder question is
+what it does the second time it sees the same customer with the same problem.
+
+### Worked example — a bill-shock customer
+
+**HUT100055.** Kandy, Sinhala, Value 15GB, 64 months with Hutch, Rs. 1,161 a month.
+
+| Night | What happens |
+|---|---|
+| **1** | The nightly job builds his 24 features. Data use 3.0 GB → 0.8 GB. Reloads nearly halved. `has_overage` = 1: he was charged Rs. 459 extra. Risk 42. |
+| | Cause attribution: he was charged for overage and then cut back — **bill shock**. |
+| | Suppression checks him: not travelling, base not seasonally down, not contacted recently. Clear. |
+| | The action for bill shock is *explain the charge and offer better value*, so the Max 40GB template is filled with his overage amount and his suggested plan, in **Sinhala**, from his account record. |
+| | It is released to the messaging platform with his id, the cause, and the reason. The ledger records: date, cause, action, channel. |
+
+### Night 2, and every night after
+
+**The model has no memory.** It re-scores him from scratch every night using the
+last 26 weeks. That is deliberate: a model that remembered its own past decisions
+would start predicting its own behaviour instead of the customer's.
+
+Memory lives in the **policy layer**, not the model. So on night 2 he is scored
+again, still comes out as bill shock, still sits above the line — and the fatigue
+rule holds him:
+
+> *Contacted 2 days ago — inside the 30-day window.*
+
+He stays visible in the **Held back** queue with that reason. He is not contacted
+again, and he is not forgotten.
+
+### When the window closes
+
+After 30 days his behaviour has moved in one of three directions, and each means
+something different:
+
+| What the data shows | What it means | What the system does |
+|---|---|---|
+| Risk has fallen, usage recovered | The offer worked | Record the save. He is no longer in the queue. |
+| Risk unchanged, same cause | **The action failed for this customer** | Escalate to a different action — not the same message again |
+| Risk higher, or he stopped attaching | He is going regardless | Last-resort tier, or accept the loss and stop spending |
+
+**The middle row is the important one.** Repeating a failed action is the most
+common way a retention programme wastes money: a customer who ignored one SMS will
+ignore the second one, and the third. So the response to *"same diagnosis, no
+change"* is never *"send it again"*. It is one of:
+
+- **A different channel.** SMS was ignored; an outbound call from an agent is a
+  different act, and for a high-value customer it is worth the cost.
+- **A different hypothesis.** The cause may have been wrong. Bill shock and a plan
+  that is genuinely too small look similar; if the first remedy did nothing, the
+  second-ranked cause is tried.
+- **Stop.** After a configured number of failed attempts the customer is marked
+  *do not contact* for a cooling period. Knowing when to stop spending on someone
+  is part of the economics, not a failure of the model.
+
+### The contact ledger
+
+All of this depends on one table that is **not** among the four the model consumes,
+because it is written by the system rather than read from the operator:
+
+| Column | Purpose |
+|---|---|
+| `customer_id`, `date` | who and when |
+| `cause`, `action`, `channel` | what was tried, and on what hypothesis |
+| `outcome` | did behaviour recover in the following weeks |
+| `attempt_no` | how many times this cause has now been addressed |
+
+It serves three jobs: it drives the fatigue rule, it drives escalation, and it is
+what eventually turns the save rate from a stated assumption into a measurement.
+
+### What is implemented, and what is not
+
+`suppression()` takes a `last_contact_days` argument and applies the fatigue rule
+whenever it is supplied. It cannot fire against the simulated data, because that
+data contains no campaign history — no campaign has been run against it. The
+escalation ladder above is **designed and documented, not implemented**: it needs
+real outcomes to be worth building, and inventing simulated outcomes would only
+let us measure our own assumptions.
+
+### Does it track the customer daily?
+
+It re-scores every customer every night, but the evidence underneath moves
+**weekly**. Features are weekly aggregates, so a day-to-day score would mostly
+track noise — which day of the week it is, whether someone was on wifi. Nightly
+scoring over weekly evidence means a genuine change shows up within a day or two
+of becoming real, without the system reacting to a quiet Tuesday.
+
 ## 8. System architecture
 
 ![StaySignal architecture](architecture.png)
@@ -447,4 +713,4 @@ Phase table, owners, milestones, dependencies and risks:
 
 **Team Falconyx** — Yaneth De Alwis · Thamindu Nisal · Uchitha Samaranayake ·
 Yohara Perera · Thuvini Mahagamage
-University of Sri Jayewardenepura, Department of Electronics and Telecommunication
+University of Sri Jayewardenepura, Department of Electrical and Electronic Engineering

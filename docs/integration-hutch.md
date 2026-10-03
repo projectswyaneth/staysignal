@@ -146,6 +146,64 @@ per source:
 Nothing else in the repository is touched — not the features, not the model, not
 the console.
 
+### Reading from a warehouse rather than from files
+
+The CSV loader exists because a laptop has no warehouse attached to it. The
+production path is `from_sql_warehouse()`, which takes any DB-API connection or
+SQLAlchemy engine:
+
+```python
+import snowflake.connector
+conn = snowflake.connector.connect(
+    account="hutch_xy12345", user="STAYSIGNAL_READER",
+    password=os.environ["SF_PASSWORD"],      # never in the code
+    warehouse="ANALYTICS_WH", database="PREPAID")
+
+frames = from_sql_warehouse(conn, schema="PUBLIC", since_week=1)
+```
+
+We deliberately do **not** name a vendor in the design. Hutch said "the data
+warehouse" and did not say which one; Snowflake, Oracle, Teradata, BigQuery and
+Postgres all speak SQL and all work through this one function. Naming a product
+Hutch may not run would be assuming something about their infrastructure.
+
+No file is created anywhere on this path.
+
+**It is tested, not asserted.** `python integrations/oss_adapter.py` builds a
+SQLite database from the extracts, reads it back through `from_sql_warehouse()`,
+and checks the resulting tables are identical to the file path. SQLite is the
+one SQL engine available to us without an account — but the code under test is
+the code a Snowflake connection would run. Only the connection object differs.
+
+**At real scale, push the aggregation down.** The weekly feature build is a
+`GROUP BY`, and a warehouse does that far faster than pandas can. Against a base
+of millions, the right shape is to compute the recent-window and baseline-window
+aggregates in SQL and pull **one row per customer** rather than twenty-six:
+
+```sql
+SELECT customer_id,
+       AVG(CASE WHEN week > 22              THEN data_gb END) AS recent_data,
+       AVG(CASE WHEN week BETWEEN 5 AND 16  THEN data_gb END) AS base_data
+FROM   CUSTOMERS_WEEKLY
+GROUP  BY customer_id
+```
+
+That moves megabytes instead of gigabytes, and the feature definitions do not
+change — only where the arithmetic happens.
+
+### A precise note on "data never leaves"
+
+Worth stating carefully, because the loose version of this claim is wrong.
+
+If Hutch's warehouse is a cloud product, their data is already in that cloud —
+that was Hutch's decision, made before StaySignal existed. What we can honestly
+claim is narrower and still strong:
+
+> **StaySignal adds no new destination for customer data.** It reads from where
+> Hutch already keeps it, and sends nothing anywhere else. No external API, no
+> LLM, no vendor endpoint, no telemetry. The only outbound thing in the whole
+> system is an SMS, sent by Hutch's own platform.
+
 ### It refuses bad extracts rather than scoring them
 
 What usually derails a telecom pilot is not the model. It is three months of

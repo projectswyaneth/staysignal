@@ -16,8 +16,8 @@ matches what Hutch would export rather than something invented for a demo:
 
 Everything here is SIMULATED, and that is stated wherever a number appears.
 The point of the simulator is not to pretend to be Hutch's data. It is to
-contain, deliberately, every trap the judges asked about, so the fixes can be
-MEASURED rather than claimed:
+contain the specific confounders this system has to survive, so that each
+mitigation can be MEASURED rather than asserted:
 
     a national holiday inside the scoring window     weeks 24-25
     customers who travel and are not leaving         ~12% of the base
@@ -43,8 +43,8 @@ SUFFIX = "demo_" if DEMO else ""
 RECENT = 4                       # weeks 23-26 are "now"
 BASE_FROM, BASE_TO = 5, 17       # weeks 5..16 are the customer's own baseline
 
-# A national holiday INSIDE the recent window. Every customer's usage falls.
-# This is the trap the idea-pitch model fell straight into.
+# A national holiday inside the scoring window. Every subscriber's usage falls,
+# so a model watching only "did usage fall" cannot distinguish it from churn.
 HOLIDAY_WEEKS = {23, 24}
 HOLIDAY_FACTOR = 0.62
 
@@ -398,13 +398,13 @@ def true_churn_probability(static, weekly, cells_meta):
 
     Two design choices matter more than any coefficient here:
 
-      TRAVELLING AND THE HOLIDAY DO NOT CAUSE CHURN. Usage falls, but nobody
-      is leaving. A model that only watches "did usage fall" will flag them,
-      waste money, and deserve to.
+      Travel and the holiday period carry NO churn effect. Usage falls in both,
+      but no subscriber is leaving, so any model that keys on "usage fell" alone
+      will produce false positives here.
 
-      MOBILITY DOES NOT CAUSE CHURN EITHER. A sales rep is no more and no less
-      likely to leave than anyone else. So any system that treats "many towers"
-      as evidence - in either direction - is reading noise.
+      Mobility carries NO churn effect either. A high-mobility subscriber is
+      neither more nor less likely to churn, so treating distinct-cell counts as
+      evidence in either direction fits noise.
     """
     df = pd.DataFrame(weekly)
     # Whether someone is really leaving must not depend on a public holiday,

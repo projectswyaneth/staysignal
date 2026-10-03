@@ -120,7 +120,7 @@ and triggers the matching recovery action. &nbsp;·&nbsp; Team Falconyx · Ignit
 
 <div class="boundary">
   <div class="boundary-tag">Deployed inside Hutch
-    <span>— subscriber data never leaves the operator's boundary, and no per-customer call is made to any external service</span>
+    <span>— StaySignal adds no new place for subscriber data to go: it reads only where Hutch already keeps it, and makes no per-customer call to any external service</span>
   </div>
 
   <!-- 1 -->
@@ -249,8 +249,8 @@ and triggers the matching recovery action. &nbsp;·&nbsp; Team Falconyx · Ignit
 
   <!-- 6 -->
   <div class="band">
-    <div class="band-h"><div class="n">6</div><h2>Action &amp; interface</h2>
-      <p>Prototype: <code>staysignalbyfalconyx.netlify.app</code></p></div>
+    <div class="band-h"><div class="n">6</div><h2>Action, automation &amp; interface</h2>
+      <p>Scheduled nightly &middot; the console supervises, it does not send</p></div>
     <div class="row c3">
       <div class="box"><h3>Offer matched to the cause</h3>
         <p>One action per cause, each with a named owner and a cost. Network faults route to the RF team as a
@@ -259,9 +259,26 @@ and triggers the matching recovery action. &nbsp;·&nbsp; Team Falconyx · Ignit
         <p>SMS written in Sinhala, Tamil or English, chosen from the customer's own language field — not
         translated at send time.</p></div>
       <div class="box"><h3>CEM console for agents</h3>
-        <p>Ranked queue, the evidence behind each score, the named tower, and a separate held-back queue so a
-        suppressed customer is visible instead of silently dropped.</p></div>
+        <p>Ranked queue, the evidence behind each score, the named tower, and separate held-back and
+        released queues, so every decision is visible. The console produces the decision; the operator's
+        own SMS platform owns delivery, retries and opt-out.</p></div>
     </div>
+    <div class="row c3" style="margin-top:13px">
+      <div class="box"><h3>Released automatically</h3>
+        <p>Low-cost standard offers &mdash; a fault notification, free night data &mdash;
+        and plan changes within a daily budget cap. No person is involved.</p>
+        <span class="src">nightly batch &middot; no human in the loop</span></div>
+      <div class="box"><h3>Queued for one human glance</h3>
+        <p>Customers above a spend threshold. Tens per day, not millions: the team
+        sees only the exceptions, which is what makes a base of millions operable
+        by three or four people.</p>
+        <span class="src">review threshold &middot; configurable</span></div>
+      <div class="box"><h3>Routed elsewhere entirely</h3>
+        <p>Network-caused cases become RF work orders. Catalogue gaps become a
+        monthly product report. Neither is a retention offer.</p>
+        <span class="src">RF team &middot; product team</span></div>
+    </div>
+
     <div class="feedback">
       <b>Feedback loop.</b> Every contact, every outcome and every suppression reason is written back to the
       warehouse, so the next retrain learns from what actually worked — and the save rate stops being an

@@ -293,12 +293,39 @@
 
   /* ----------------------------------------------------------------- list */
 
-  const state = { cause: null, town: null, selected: null, lang: null };
+  const META = DATA.meta || {};
+
+  /* Actions the operator has released this session. Deliberately held in memory
+     and not persisted: each run of the console starts from a clean queue. The
+     console does not send anything itself — in production the queued action is
+     handed to the operator's existing SMS platform, which already owns
+     delivery, retries and opt-out handling. */
+  const QUEUE = [];
+  const state = { cause: null, town: null, selected: null, lang: null, view: "all" };
+
+  /* A customer can be flagged and still not contacted. "held" is a view of its
+     own so suppressed customers remain visible; suppression emits no alert of
+     its own, so without this view the decision is unauditable. */
+  function inView(c) {
+    if (state.view === "flagged") return c.high && !c.queued;
+    if (state.view === "held") return c.high && !!c.hold;
+    if (state.view === "queued") return !!c.queued;
+    return true;
+  }
 
   function filtered() {
     return CUSTOMERS.filter((c) =>
+      inView(c) &&
       (!state.cause || c.cause === state.cause) &&
       (!state.town || c.region === state.town));
+  }
+
+  function refreshCounts() {
+    const setN = (id, n) => { const el = $(id); if (el) el.textContent = n; };
+    setN("#n-all", CUSTOMERS.length);
+    setN("#n-flagged", CUSTOMERS.filter((c) => c.high && !c.queued).length);
+    setN("#n-held", CUSTOMERS.filter((c) => c.high && c.hold).length);
+    setN("#n-queued", QUEUE.length);
   }
 
   function renderList() {
@@ -309,14 +336,35 @@
     if (count) count.textContent = rows.length + " customers";
 
     if (!rows.length) {
-      list.innerHTML = '<div style="padding:34px;text-align:center;color:var(--faint)">Nobody matches that filter.</div>';
+      list.innerHTML = '<div style="padding:34px;text-align:center;color:var(--faint)">' +
+        (state.view === "held"
+          ? "Nobody is being held back right now. When the whole base dips, or a customer is away from their usual towers, they appear here instead of being contacted."
+          : "Nobody matches that filter.") + "</div>";
       return;
     }
 
-    list.innerHTML = rows.map((c) =>
+    const note = state.view === "held"
+      ? '<div class="view-note">Flagged, but <b>not contacted</b>. Suppression is the ' +
+        'second net, not the first — travellers now score so low that most never ' +
+        'reach the alert line at all, which is why this queue is short. In our test ' +
+        'set it is the difference between wasting 12 offers on people on holiday ' +
+        'and wasting none.</div>'
+      : state.view === "queued"
+      ? '<div class="view-note">Released to the messaging platform this session. ' +
+        'StaySignal does not deliver messages &mdash; it produces the decision ' +
+        '(who, what, why, which language) and hands it to the operator\'s existing ' +
+        'SMS platform. <b>Delivery here is simulated.</b></div>'
+      : state.view === "flagged"
+      ? '<div class="view-note">Above the alert line. The line is set where revenue ' +
+        'is best protected — not where accuracy peaks.</div>'
+      : "";
+
+    list.innerHTML = note + rows.map((c) =>
       '<div class="row' + (state.selected === c.id ? " on" : "") + '" data-id="' + c.id + '">' +
         '<div class="row-id mono">' + c.id + "</div>" +
-        '<div class="row-cause">' + c.cause + "</div>" +
+        '<div class="row-cause">' + c.cause +
+          (c.high && c.hold ? '<span class="row-held">held</span>' : "") +
+          (c.queued ? '<span class="row-queued">queued</span>' : "") + "</div>" +
         '<div class="row-region">' + c.region + "</div>" +
         '<div class="row-spend mono">Rs. ' + fmt(c.spend) + "</div>" +
         '<div class="row-score mono" style="color:' + (c.high ? "var(--risk)" : "var(--muted)") + '">' +
@@ -345,7 +393,16 @@
     state.lang = c.language;
     renderList();
     renderDetail(c);
-    $("#detail").scrollIntoView({ behavior: "smooth", block: "nearest" });
+    scrollToDetail();
+  }
+
+  /* scrollIntoView is absorbed by the panel's own overflow, so the page is
+     scrolled directly. The offset clears the fixed header. */
+  function scrollToDetail() {
+    const el = $("#detail");
+    if (!el) return;
+    const y = el.getBoundingClientRect().top + window.scrollY - 92;
+    window.scrollTo({ top: Math.max(0, y), behavior: "smooth" });
   }
 
   function renderDetail(c) {
@@ -369,13 +426,21 @@
         '<div class="diag">' +
           '<div class="diag-l">Diagnosis</div>' +
           "<h4>" + c.cause + "</h4>" +
-          "<p>" + c.action + "</p>" +
+          /* Below the alert line there is no action to take, so we do not show
+             an offer. Naming an offer for a customer we are not contacting is
+             how a demo ends up promising something the system never does. */
+          "<p>" + (c.high ? c.action
+                          : "Below the alert line — monitor only, no offer") + "</p>" +
           (c.cellKind !== "healthy"
             ? "<p class='diag-note'>Tower " + c.cell + ": " + c.cellWhy + ".</p>" : "") +
+          /* Demand that sits outside the package catalogue is a product finding,
+             not a customer problem, so it is named rather than papered over. */
+          (c.productGap
+            ? "<p class='diag-note gap'>Product gap &mdash; " + c.productGap +
+              ". Routed to the product team, not to retention.</p>" : "") +
         "</div>" +
-        /* Flagged is not the same as contacted. A suppressed customer is shown
-           here with the reason, never dropped silently — the failure we could
-           not see was the one that survived longest. */
+        /* Flagged is not the same as contacted: a suppressed customer is shown
+           with the reason rather than dropped silently. */
         (c.high && c.hold
           ? '<div class="diag held">' +
               '<div class="diag-l">Held back — not contacted</div>' +
@@ -402,6 +467,8 @@
             (c.overage ? "charged" : "none") + "</td></tr>" +
         "</tbody></table>" +
 
+        usageChart(c) +
+
         '<div class="contribs">' +
           '<div class="panel-h" style="margin-bottom:12px">Why the model scored it this way</div>' +
           top.map((p) =>
@@ -427,8 +494,10 @@
           "</div>" +
           '<div class="phone"><div class="bubble" id="bubble">' + c.messages[state.lang] + "</div></div>" +
           '<div class="sms-foot">' +
-            '<button class="btn btn-primary" id="send">Send this offer</button>' +
-            '<span class="sent" id="sent">&#10003; Sent · Rs. ' + fmt(c.spend) + " protected</span>" +
+            '<button class="btn btn-primary" id="send"' + (c.queued ? " disabled" : "") + ">" +
+              (c.queued ? "Queued &middot; " + c.queued : "Release this offer") + "</button>" +
+            '<span class="sent' + (c.queued ? " show" : "") + '" id="sent">' +
+              "Handed to the messaging platform</span>" +
           "</div>" +
         "</div>" +
       "</div>";
@@ -454,15 +523,30 @@
       });
     });
 
-    $("#send", el).addEventListener("click", (e) => {
-      const btn = e.currentTarget;
-      btn.textContent = "Sending…";
-      btn.disabled = true;
-      setTimeout(() => {
-        btn.textContent = "Sent";
-        $("#sent", el).classList.add("show");
-      }, 850);
-    });
+    /* Releasing an action records it in the queue, removes the customer from
+       the work list and updates the counts. Nothing is delivered here: the
+       console produces the decision, and the operator's SMS platform owns
+       delivery. The label says "release", not "send", for that reason. */
+    const sendBtn = $("#send", el);
+    if (sendBtn && !c.queued) {
+      sendBtn.addEventListener("click", (e) => {
+        const btn = e.currentTarget;
+        btn.textContent = "Releasing…";
+        btn.disabled = true;
+        setTimeout(() => {
+          const now = new Date();
+          c.queued = String(now.getHours()).padStart(2, "0") + ":" +
+                     String(now.getMinutes()).padStart(2, "0");
+          QUEUE.push({
+            id: c.id, cause: c.cause, language: state.lang || c.language,
+            channel: "SMS", at: c.queued, spend: c.spend,
+          });
+          refreshCounts();
+          renderList();
+          renderDetail(c);
+        }, 650);
+      });
+    }
   }
 
   function factRow(label, before, now, change, higherIsBad) {
@@ -489,13 +573,90 @@
         Math.round(M.threshold * 100) + " / 100</div>";
   }
 
+
+  /* ------------------------------------------------- 26-week history chart */
+  /* Draws the subscriber's own 26-week history, shading the two windows the
+     features actually compare: the baseline window and the scoring window. The
+     holiday weeks are marked separately because the whole base falls there, so
+     a fall matching the population is not evidence. */
+  function usageChart(c) {
+    const w = c.weekly || [];
+    if (w.length < 8) return "";
+
+    const W = 600, H = 148, PAD_L = 4, PAD_R = 4, TOP = 12, BOT = 26;
+    const n = w.length;
+    const max = Math.max.apply(null, w) || 1;
+    const x = (i) => PAD_L + (i * (W - PAD_L - PAD_R)) / (n - 1);
+    const y = (v) => TOP + (1 - v / max) * (H - TOP - BOT);
+
+    const line = w.map((v, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(v).toFixed(1)).join(" ");
+    const area = line + " L" + x(n - 1).toFixed(1) + " " + (H - BOT) +
+                 " L" + x(0).toFixed(1) + " " + (H - BOT) + " Z";
+
+    /* Window markers sit behind the data and must stay recessive: the line is
+       the subject. Opacity is set in CSS per class rather than per rect, so the
+       fade-in animation ends at the intended value instead of full strength. */
+    const band = (fromWeek, toWeek, cls, fill) => {
+      const a = x(Math.max(fromWeek - 1, 0)), b = x(Math.min(toWeek - 1, n - 1));
+      return '<rect class="band ' + cls + '" x="' + a.toFixed(1) + '" y="' + TOP +
+             '" width="' + (b - a).toFixed(1) + '" height="' + (H - TOP - BOT) +
+             '" fill="' + fill + '"/>';
+    };
+    const rule = (week) => {
+      const px = x(Math.max(week - 1, 0)).toFixed(1);
+      return '<line class="rule" x1="' + px + '" y1="' + TOP + '" x2="' + px +
+             '" y2="' + (H - BOT) + '"/>';
+    };
+
+    const recentFrom = (META.weeks || 26) - (META.recent || 4) + 1;
+    const holiday = META.holidayWeeks || [];
+    const hol = holiday.length
+      ? band(Math.min.apply(null, holiday), Math.max.apply(null, holiday) + 1,
+             "b-hol", "#C9A227")
+      : "";
+
+    const label = (week, text, anchor) =>
+      '<text x="' + x(Math.max(week - 1, 0)).toFixed(1) + '" y="' + (H - 9) +
+      '" fill="#5E6770" font-size="10.5" text-anchor="' + anchor + '">' + text + "</text>";
+
+    return '<div class="usage">' +
+      '<div class="usage-h"><span>26 weeks of data use</span>' +
+        "<b>" + (c.dataBefore).toFixed(1) + " GB &rarr; " + (c.dataNow).toFixed(1) + " GB per month</b></div>" +
+      '<svg viewBox="0 0 ' + W + " " + H + '" preserveAspectRatio="none" role="img" ' +
+        'aria-label="Weekly data use over 26 weeks">' +
+        '<defs><linearGradient id="ug" x1="0" y1="0" x2="0" y2="1">' +
+          '<stop offset="0%" stop-color="#FF5A1F" stop-opacity=".30"/>' +
+          '<stop offset="100%" stop-color="#FF5A1F" stop-opacity="0"/>' +
+        "</linearGradient></defs>" +
+        band(5, 17, "b-base", "#9AA3AC") +
+        band(recentFrom, (META.weeks || 26) + 1, "b-now", "#FFFFFF") +
+        hol +
+        rule(recentFrom) +
+        '<path class="area" d="' + area + '" fill="url(#ug)"/>' +
+        '<path class="line" pathLength="1" d="' + line + '" fill="none" ' +
+          'stroke="#FF5A1F" stroke-width="2" stroke-linejoin="round" ' +
+          'stroke-linecap="round"/>' +
+        '<circle class="dot" cx="' + x(n - 1).toFixed(1) + '" cy="' + y(w[n - 1]).toFixed(1) +
+          '" r="3.5" fill="#FF5A1F"/>' +
+        label(1, "week 1", "start") +
+        label(10, "their own baseline", "middle") +
+        label(n, "now", "end") +
+      "</svg>" +
+      '<div class="usage-key">' +
+        '<span><i style="background:rgba(154,163,172,.45)"></i>baseline the model compares against</span>' +
+        '<span><i class="key-rule"></i>the four weeks being scored</span>' +
+        (holiday.length ? '<span><i style="background:rgba(201,162,39,.55)"></i>national holiday &mdash; the whole base falls here</span>' : "") +
+      "</div></div>";
+  }
+
   /* ------------------------------------------------------------ demo cases */
 
-  /* Hunting for a bill-shock customer live in front of a panel wastes time and
-     invites a fumble. These pick the clearest example of each reason up front,
-     and "compare all four" puts every message on one screen at once. */
+  /* Pre-selects the clearest example of each cause, and renders all of them
+     side by side, so every message variant can be inspected without searching
+     the queue. */
 
-  const CAUSES = ["Network problem", "Bill shock", "Plan too big", "Losing interest"];
+  const CAUSES = ["Network problem", "Bill shock", "Plan too big",
+                  "Plan too small", "Competitor offer", "Losing interest"];
 
   function exemplar(cause) {
     const of = CUSTOMERS.filter((c) => c.cause === cause);
@@ -523,7 +684,7 @@
     el.className = "compare-view";
     el.innerHTML =
       '<div class="compare-head">' +
-        "<h3>Four customers, four reasons, four different messages</h3>" +
+        "<h3>Six customers, six reasons, six different messages</h3>" +
         '<div class="sms-head">' +
           ["Sinhala", "Tamil", "English"].map((l) =>
             '<button class="lang' + (l === lang ? " on" : "") + '" data-lang="' + l + '">' +
@@ -543,11 +704,14 @@
           "</div>").join("") +
       "</div>";
 
+    // The comparison renders below the fold, so bring it into view.
+    scrollToDetail();
+
     $$(".lang", el).forEach((b) => {
       b.addEventListener("click", () => {
         state.lang = b.dataset.lang;
         $$(".lang", el).forEach((x) => x.classList.toggle("on", x === b));
-        // all four messages change language together
+        // every message changes language together
         $$(".cmp-msg", el).forEach((m) => {
           m.classList.add("swap");
           setTimeout(() => {
@@ -636,6 +800,18 @@
             .sort((a, b) => b.n - a.n).slice(0, 6),
           Math.max.apply(null, Object.keys(byTown).map((t) => byTown[t].high)) || 1);
       }
+    });
+
+    step("views", () => {
+      refreshCounts();
+      $$(".view[data-view]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.view = btn.dataset.view;
+          $$(".view[data-view]").forEach((x) =>
+            x.classList.toggle("on", x.dataset.view === state.view));
+          renderList();
+        });
+      });
     });
 
     step("filters", () => {

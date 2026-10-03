@@ -16,7 +16,7 @@
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%2308090A'/%3E%3Ccircle cx='16' cy='16' r='6' fill='%23FF5A1F'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%23FF5A1F' stroke-opacity='.45' stroke-width='1.5'/%3E%3C/svg%3E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -89,7 +89,7 @@
         <div class="stat-l">customers drifting away</div></div>
       <div class="stat"><div class="stat-n mono" id="stat-rev" data-count="0" data-prefix="Rs. ">Rs. 0</div>
         <div class="stat-l">monthly revenue at risk</div></div>
-      <div class="stat"><div class="stat-n mono" data-count="4">0</div>
+      <div class="stat"><div class="stat-n mono" data-count="6">0</div>
         <div class="stat-l">reasons, each with its own fix</div></div>
       <div class="stat"><div class="stat-n mono" data-count="3">0</div>
         <div class="stat-l">languages: Sinhala, Tamil, English</div></div>
@@ -101,9 +101,11 @@
 <section id="how">
   <div class="wrap">
     <div class="sec-head rv">
-      <h2>One discount cannot fix<br>four different problems</h2>
-      <p>A customer leaving because the signal drops in Jaffna will take your free data
-         and leave anyway. StaySignal works out which problem it actually is, then acts.</p>
+      <span class="eyebrow-rule">Why it is hard</span>
+      <h2>One discount cannot fix six different problems</h2>
+      <p>A customer leaving because the signal drops on their tower will take your free
+         data and leave anyway. StaySignal works out which problem it actually is, then
+         sends the one thing that fixes it.</p>
     </div>
 
     <div class="steps rv">
@@ -113,7 +115,8 @@
         </svg>
         <div class="step-n mono">01</div><h3>Detect</h3>
         <p>A trained model scores every customer 0–100 on the chance they go silent
-           within 30 days, from reload gaps, data use and app activity.</p>
+           within 30 days — from their own usage history, the condition of the towers
+           that served them, and market pressure in their district.</p>
       </div>
       <div class="step">
         <svg class="step-ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
@@ -148,6 +151,7 @@
 <section id="console">
   <div class="wrap">
     <div class="sec-head rv">
+      <span class="eyebrow-rule">The prototype</span>
       <h2>The console</h2>
       <p>Every score below is computed in your browser as you click — the weights are
          loaded from <span class="mono hl">models/model.json</span> and applied live.</p>
@@ -168,7 +172,7 @@
         <div class="kpi"><div class="kpi-l">Revenue at risk / month</div>
           <div class="kpi-v mono risk" id="kpi-rev" data-count="0" data-prefix="Rs. ">Rs. 0</div></div>
         <div class="kpi"><div class="kpi-l">Reasons found</div>
-          <div class="kpi-v mono">4</div></div>
+          <div class="kpi-v mono">6</div></div>
       </div>
 
       <div class="panel-row">
@@ -185,13 +189,27 @@
         </div>
       </div>
 
+      <!-- These open one real example of each cause. The chip row below filters
+           the list instead; the two are different actions on the same set. -->
       <div class="demo-strip">
-        <span class="demo-l">Demo cases</span>
+        <span class="demo-l">Jump to an example</span>
         <button class="case" data-case="Network problem"><i></i>Network problem</button>
         <button class="case" data-case="Bill shock"><i></i>Bill shock</button>
         <button class="case" data-case="Plan too big"><i></i>Package too big</button>
+        <button class="case" data-case="Plan too small"><i></i>Package too small</button>
+        <button class="case" data-case="Competitor offer"><i></i>Competitor offer</button>
         <button class="case" data-case="Losing interest"><i></i>Losing interest</button>
-        <button class="case compare" id="compare">Compare all four &rarr;</button>
+        <button class="case compare" id="compare">Compare all six &rarr;</button>
+      </div>
+
+      <!-- Flagged is not the same as contacted. The held-back queue is a view
+           of its own so a suppressed customer is visible rather than silently
+           dropped. -->
+      <div class="views">
+        <button class="view on" data-view="all">Whole base <span class="view-n mono" id="n-all"></span></button>
+        <button class="view" data-view="flagged">Above the alert line <span class="view-n mono" id="n-flagged"></span></button>
+        <button class="view" data-view="held">Held back <span class="view-n mono" id="n-held"></span></button>
+        <button class="view" data-view="queued">Queued today <span class="view-n mono" id="n-queued"></span></button>
       </div>
 
       <div class="filters">
@@ -216,17 +234,19 @@
 <section id="model">
   <div class="wrap">
     <div class="sec-head rv">
-      <h2>Why the model is<br>a simple one</h2>
-      <p>The challenge requires the system to explain its decisions. A linear model makes
-         that exact rather than approximate — a customer's risk is literally the sum of each
-         feature's weighted contribution, which is what the panel above shows.</p>
+      <span class="eyebrow-rule">Explainability</span>
+      <h2>Every weight, in the open</h2>
+      <p>A customer's risk is the sum of each feature's weighted contribution — exact, not
+         an approximation. Below is the entire model. Benchmarked against gradient boosting
+         on identical data: <b>0.864 against 0.840</b>. The explainable model scored higher,
+         so it costs nothing.</p>
     </div>
 
     <div class="model-grid rv">
       <div class="card">
         <h3>What it learned</h3>
-        <p class="card-p">Weights from logistic regression trained on 4,000 customers with 26 weeks of history each, labelled
-           customers. Orange raises risk, grey lowers it.</p>
+        <p class="card-p">All 24 weights, learned from 4,000 customers with 26 weeks of
+           history each. Orange raises risk, grey lowers it.</p>
         <div id="weights"></div>
       </div>
 
@@ -259,20 +279,21 @@
     </div>
 
     <div class="card rv" style="margin-top:16px">
-      <h3>Honest about where we are</h3>
-      <p class="card-p">The model is trained on simulated data, because the competition
-         dataset had not been released when this was built. The pipeline is written so only
-         the input file changes when it arrives. The offer cost and save rate are stated
-         assumptions, not measured values — an A/B test would replace them.</p>
+      <h3>What is simulated, and what is not</h3>
+      <p class="card-p">Simulated data, by necessity: the competition dataset was not
+         released. The simulator encodes standard telecom KPI definitions and realistic
+         ranges, and the pipeline reads one input file — swapping it for Hutch's extract
+         changes nothing else. Offer cost and save rate are stated assumptions; a controlled
+         holdout replaces them with measurements.</p>
     </div>
   </div>
 </section>
 
 <footer>
   <div class="wrap foot-in">
-    <span>StaySignal</span>
+    <span class="foot-brand">StaySignal <i>by</i> Falconyx</span>
     <span>IgnitX by Hutch 2026 · Track B · Challenge 4.2.3</span>
-    <span>University of Sri Jayewardenepura</span>
+    <span>Team Falconyx · University of Sri Jayewardenepura</span>
   </div>
 </footer>
 

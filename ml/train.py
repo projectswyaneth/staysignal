@@ -1,29 +1,32 @@
 """
-StaySignal — training, benchmarking and honest self-testing.
+Training, benchmarking and regression testing for StaySignal.
 
-Four models are trained on identical data so every choice is measured rather
-than asserted:
+Four models are fitted on identical data so each design choice is measured
+rather than assumed:
 
-  v1   4 features   what we brought to the idea pitch
-  v2  18 features   after the first technical panel
-  v3  24 features   after the finalist panel      <- deployed
+  v1   4 features   behaviour only
+  v2  18 features   adds population baseline, presence, network
+  v3  24 features   adds own-mobility baselines, interference, market  <- deployed
   GBM 24 features   gradient boosting, as a benchmark for the linear choice
 
-Accuracy is not the headline. Four named regression tests are, because each one
-is a question a judge actually asked and each one has a number attached:
+Aggregate accuracy is reported but is not the acceptance criterion. Four named
+regression tests are, because each targets a specific failure mode that AUC does
+not capture:
 
-  1. THE HOLIDAY TEST      how many customers on holiday do we wrongly chase?
-  2. THE SALES REP TEST    do we silently hold back a field worker who really
-                           is leaving, because he always uses many towers?
-  3. THE SHARED TOWER TEST can we tell our own congestion apart from
-                           interference we do not generate?
-  4. THE COMPETITOR TEST   do we catch customers pulled away by a rival's
-                           promotion, which nothing inside Hutch explains?
+  1. HOLIDAY       offers wasted on subscribers who are travelling, at a fixed
+                   contact budget
+  2. MOBILITY      genuine churners suppressed by mobility rules because their
+                   normal footprint is wide
+  3. CELL FAULTS   whether congestion and externally-caused degradation separate
+  4. MARKET        capture of churn driven by competitor activity
+
+Tests 2 and 4 are invisible to AUC: the first never reaches the score at all,
+and the second affects only the fraction of the base a district campaign touches.
 
 Outputs:
-  models/model.json     the deployed model (also copied to model_v3.json)
-  reports/metrics.md    every number, for the solution document
-  reports/weights.png   what the model learned
+  models/model.json     the deployed model
+  reports/metrics.md    all reported numbers
+  reports/weights.png   learned weights
 """
 import json
 import numpy as np
@@ -44,7 +47,8 @@ from sklearn.metrics import (roc_auc_score, average_precision_score,
 
 ORANGE, INK, MUTED = "#E8490B", "#12100E", "#9A938C"
 
-# Business assumptions — stated openly, unchanged since the idea pitch.
+# Commercial assumptions. Stated, not measured — see business_case.py for the
+# break-even sensitivity around each one.
 OFFER_MARGIN_GIVEN_UP = 0.15
 SMS_COST_LKR = 5
 SAVE_RATE = 0.35
@@ -132,15 +136,15 @@ def main():
     cv2, cv = cv_auc(V2), cv_auc(V3)
     print(f"  5-fold CV (v2)    {cv2.mean():.3f} (+/- {cv2.std():.3f})")
     print(f"  5-fold CV (v3)    {cv.mean():.3f} (+/- {cv.std():.3f})")
-    print("  v2 -> v3 is inside cross-validation noise on AUC, and that is")
-    print("  expected: the two faults v3 fixes are INVISIBLE to AUC. See tests 2-4.\n")
+    print("  v2 -> v3 is within cross-validation noise on AUC. Expected: two of")
+    print("  the three faults v3 addresses are not measurable by AUC (tests 2-4).\n")
 
     t_v3, val_v3, n_v3 = choose_threshold(yte, p_v3, spend_te)
 
-    # ================= TEST 1 — THE HOLIDAY TEST =========================
-    # Give every system the SAME contact budget, then ask how many of the
-    # people it chases are simply on holiday. Comparing each model at its own
-    # threshold would be comparing two different budgets, which proves nothing.
+    # ================= TEST 1 — travelling subscribers ===================
+    # Each model is given the SAME contact budget before counting how many of
+    # the contacted subscribers are merely travelling. Comparing models at their
+    # own thresholds would compare different budgets.
     travellers = prof_te == "traveller"
     BUDGET = n_v3
     tops = {k: np.argsort(-p)[:BUDGET] for k, p in
@@ -159,23 +163,21 @@ def main():
     print(f"  traveller risk percentile       v1 {ranks['v1']:.0f}th -> "
           f"v3 {ranks['v3']:.0f}th\n")
 
-    # ================= TEST 2 — THE SALES REP TEST ========================
-    # A judge asked: some people use the same two towers every day, others —
-    # sales reps, drivers — use a different set daily. Did you consider that?
-    #
-    # We had not, and the cost was not a wasted offer. It was the opposite, and
-    # worse: the v2 suppression rules used ABSOLUTE thresholds, so a field
-    # worker looked permanently "away from home" and was held back every single
-    # week — including the weeks he really was leaving. Nothing surfaces a
-    # suppressed customer, so that failure is silent.
+    # ================= TEST 2 — high-mobility subscribers ================
+    # Absolute mobility thresholds misclassify subscribers whose normal
+    # footprint is wide. A field worker's share of sessions on his modal cell is
+    # permanently low, so an absolute rule suppresses him in every week,
+    # including weeks in which he is genuinely churning. Suppression emits no
+    # alert, so this error does not appear in any accuracy metric. Measured here
+    # by comparing the v2 and v3 rulesets on the same scored population.
     Xte_v3 = Xte[V3]
     hold_v2 = np.array(suppression(Xte_v3, pop, version="v2"), dtype=object)
     hold_v3 = np.array(suppression(Xte_v3, pop, version="v3"), dtype=object)
 
     def travel_hold(reasons):
-        """Only the TRAVEL reasons. The seasonal rule is a separate mechanism
-        and during a holiday week it legitimately holds back most of the base,
-        so including it here would drown the effect being measured."""
+        """Travel reasons only. The seasonal rule is a separate mechanism that
+        legitimately suppresses most of the base during a holiday week, which
+        would mask the effect under test."""
         return np.array([bool(r) and r.startswith("Travelling") for r in reasons])
 
     trav_v2, trav_v3 = travel_hold(hold_v2), travel_hold(hold_v3)
@@ -198,18 +200,16 @@ def main():
     print(f"  genuine travellers still held back   v2 {trav_held_v2}  ->  "
           f"v3 {trav_held_v3}   of {int(travellers.sum())}\n")
 
-    # ================= TEST 3 — THE SHARED TOWER TEST =====================
-    # A judge asked: towers are shared with Mobitel, Dialog, Airtel — congestion
-    # there causes a network loss for your customer. How would you identify that?
-    #
-    # We cannot see another operator's traffic, and we never will. But we can
-    # see signal loss that OUR OWN load does not explain, and that is the
-    # fingerprint. The table below is the proof that the two separate.
+    # ================= TEST 3 — cell fault separation =====================
+    # Another operator's traffic on a shared site is not observable to us.
+    # Degradation our own load does not explain is. Cells are grouped by the
+    # shape of their own KPI history to check that congestion and externally
+    # caused degradation produce distinguishable signatures.
     cells_now = cell_baselines(c)
     truth = (c[["cell_id"]].drop_duplicates().set_index("cell_id"))
-    # recover each cell's fault type from the KPI shape of the raw export
-    # (the simulator's label is not available to the model, so this is only
-    # used here, to verify the feature behaves as designed)
+    # Fault type is recovered from the KPI shape of the export. The simulator's
+    # own label is not used: this grouping must be derivable from data an
+    # operator would actually have.
     sev = c.groupby("cell_id").agg(
         prb_rise=("prb_utilisation_pct", lambda v: v.tail(4).mean() - v.head(16).median()),
         sinr_fall=("avg_sinr_db", lambda v: v.head(16).median() - v.tail(4).mean()),
@@ -235,10 +235,10 @@ def main():
     print("  -> congestion and interference look identical in SINR alone, and")
     print("     separate cleanly once SINR is read against our own PRB.\n")
 
-    # ================= TEST 4 — THE COMPETITOR TEST =======================
-    # A judge asked: what about Dialog's and Mobitel's promotions? Nothing
-    # inside Hutch explains a customer leaving because somebody else got
-    # cheaper. So it is supplied as an external district-level signal.
+    # ================= TEST 4 — competitor-driven churn ===================
+    # Churn caused by a rival's pricing has no internal explanation, so it is
+    # supplied as an external district-level signal. Measured as capture of
+    # affected churners at a fixed contact budget.
     pulled = (ps_te == 1) & (exp_te > 0.3) & (yte == 1)
     rec_v2 = float(np.isin(np.where(pulled)[0], tops["v2"]).mean()) if pulled.sum() else 0.0
     rec_v3 = float(np.isin(np.where(pulled)[0], tops["v3"]).mean()) if pulled.sum() else 0.0

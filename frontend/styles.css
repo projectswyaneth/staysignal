@@ -421,3 +421,240 @@ footer { border-top: 1px solid var(--line-soft); padding: 40px 0 56px; color: va
   border-color:#F3CDBB; background:#FDF1EB;
 }
 .diag.held .diag-l{ color:#A53607; }
+
+
+/* --- held-back view + 26-week history chart ------------------------------ */
+.views{
+  display:flex; gap:8px; flex-wrap:wrap; align-items:center;
+  padding:14px 18px 0;
+}
+.view{
+  font:inherit; font-size:13px; font-weight:500; cursor:pointer;
+  color:var(--muted); background:transparent;
+  border:1px solid var(--line,#23262b); border-radius:9px;
+  padding:7px 13px; display:inline-flex; align-items:center; gap:8px;
+  transition:border-color .16s, color .16s, background .16s;
+}
+.view:hover{ color:var(--ink,#fff); border-color:#3a3f46; }
+.view.on{ color:var(--ink,#fff); border-color:var(--risk,#FF5A1F); background:rgba(255,90,31,.08); }
+.view-n{ font-size:12px; color:var(--faint,#6b7078); }
+.view.on .view-n{ color:var(--risk,#FF5A1F); }
+
+.row-held{
+  font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+  color:#C9A227; border:1px solid rgba(201,162,39,.35); background:rgba(201,162,39,.10);
+  border-radius:5px; padding:2px 6px; margin-left:8px; white-space:nowrap;
+}
+
+.usage{ margin-top:20px; }
+.usage-h{
+  display:flex; align-items:baseline; justify-content:space-between;
+  font-size:11px; letter-spacing:.08em; text-transform:uppercase;
+  color:var(--faint,#6b7078); margin-bottom:9px;
+}
+.usage-h b{ color:var(--muted); font-weight:500; letter-spacing:0; text-transform:none; font-size:12px; }
+.usage svg{ width:100%; height:auto; display:block; }
+.usage-key{
+  display:flex; gap:16px; flex-wrap:wrap; margin-top:8px;
+  font-size:11.5px; color:var(--faint,#6b7078);
+}
+.usage-key i{
+  display:inline-block; width:9px; height:9px; border-radius:2px;
+  margin-right:5px; vertical-align:-1px;
+}
+
+.view-note{
+  padding:13px 18px; font-size:12.5px; line-height:1.55; color:var(--muted);
+  border-bottom:1px solid var(--line-soft); background:var(--surface-2);
+}
+.view-note b{ color:var(--text); font-weight:600; }
+
+.diag-note.gap{ color:#C9A227; }
+
+.row-queued{
+  font-size:10.5px; font-weight:600; letter-spacing:.04em; text-transform:uppercase;
+  color:var(--safe,#2FBF8F); border:1px solid rgba(47,191,143,.35);
+  background:rgba(47,191,143,.10); border-radius:5px; padding:2px 6px;
+  margin-left:8px; white-space:nowrap;
+}
+.btn:disabled{ opacity:.55; cursor:default; }
+
+
+/* --- display figures ------------------------------------------------------
+   Montserrat is used for the large standalone numbers only: the risk score,
+   the headline metrics and the revenue figures. Tabular data keeps the mono
+   face, where equal-width digits are what makes a column readable.
+   tabular-nums is set explicitly so the figures do not shift width while a
+   value animates. */
+.ring-n,
+.metric-v,
+.row-score,
+.cmp-score {
+  font-family: Montserrat, Inter, "Helvetica Neue", Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.015em;
+}
+
+
+/* --- headings and the weights panel --------------------------------------
+   Montserrat on section and card headings, to match the display figures.
+   Its letterforms are wider than Inter's, so the size is brought down and the
+   tracking loosened; the body text stays on Inter, which reads better at
+   paragraph sizes. */
+.sec-head h2,
+.card h3 {
+  font-family: Montserrat, Inter, "Helvetica Neue", Arial, sans-serif;
+  font-weight: 700;
+}
+.sec-head h2 {
+  font-size: clamp(27px, 3.5vw, 43px);
+  letter-spacing: -0.022em;
+  line-height: 1.12;
+}
+.sec-head p { font-size: 16.5px; }
+.card h3 { font-size: 19px; letter-spacing: -0.015em; }
+.card-p { font-size: 14.5px; }
+
+/* A wider label column and a slightly smaller face keep the long feature
+   names on one line each, so the bars read as a single ranked list. */
+.weight-row {
+  grid-template-columns: 236px 1fr;
+  font-size: 13px;
+  line-height: 1.35;
+  margin-bottom: 11px;
+}
+@media (max-width: 760px) {
+  .weight-row { grid-template-columns: 1fr; gap: 6px; }
+}
+
+.card-p { margin-bottom: 20px; }
+
+
+/* --- vertical rhythm ------------------------------------------------------
+   120px between sections left large empty bands above every heading. Brought
+   in so a section reads as one block rather than a heading floating alone. */
+section { padding: 78px 0; }
+section.tight { padding: 58px 0 24px; }
+.sec-head { margin-bottom: 38px; }
+
+/* The standalone figures all share the display face. */
+.stat-n, .kpi-v {
+  font-family: Montserrat, Inter, "Helvetica Neue", Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+/* --- the 26-week line draws itself ---------------------------------------
+   The chart is a signal being traced, so it is drawn rather than switched on.
+   The shaded windows fade in first, the line follows, and the end point lands
+   last, which puts the eye on the most recent four weeks. */
+@keyframes usage-draw { from { stroke-dashoffset: 1 } to { stroke-dashoffset: 0 } }
+@keyframes usage-fade { from { opacity: 0 } to { opacity: 1 } }
+
+/* Each window fades to its OWN final opacity. Animating to 1 and relying on
+   the rect's opacity attribute does not work: the CSS animation wins, and every
+   band ends up solid. */
+@keyframes band-base { from { opacity: 0 } to { opacity: .07 } }
+@keyframes band-now  { from { opacity: 0 } to { opacity: .05 } }
+@keyframes band-hol  { from { opacity: 0 } to { opacity: .17 } }
+@keyframes rule-in   { from { opacity: 0 } to { opacity: .45 } }
+
+.usage .b-base { opacity: 0; animation: band-base .45s ease .1s forwards; }
+.usage .b-now  { opacity: 0; animation: band-now  .45s ease .1s forwards; }
+.usage .b-hol  { opacity: 0; animation: band-hol  .45s ease .1s forwards; }
+.usage .rule {
+  opacity: 0; stroke: #FF5A1F; stroke-width: 1; stroke-dasharray: 3 3;
+  animation: rule-in .4s ease .3s forwards;
+}
+.usage-key .key-rule {
+  width: 2px; height: 11px; border-radius: 1px; background: #FF5A1F;
+  margin-right: 8px; vertical-align: -2px;
+}
+.usage .area { opacity: 0; animation: usage-fade .7s ease .45s forwards; }
+.usage .line {
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  animation: usage-draw 1.15s cubic-bezier(.16,1,.3,1) .15s forwards;
+}
+.usage .dot { opacity: 0; animation: usage-fade .35s ease 1.15s forwards; }
+
+@media (prefers-reduced-motion: reduce) {
+  .usage .area, .usage .line, .usage .dot { animation: none; opacity: 1; stroke-dashoffset: 0; }
+  .usage .b-base { animation: none; opacity: .07 }
+  .usage .b-now  { animation: none; opacity: .05 }
+  .usage .b-hol  { animation: none; opacity: .17 }
+  .usage .rule   { animation: none; opacity: .45 }
+}
+
+
+/* --- section headings -----------------------------------------------------
+   Large heading on the left, intro top-aligned beside it on the right. The
+   earlier attempt bottom-aligned the two columns, which pushed a short heading
+   to the foot of a tall paragraph; aligning to the START puts both first lines
+   on the same baseline, which is what makes the pairing read as deliberate.
+
+   Not justified: justified text on screen stretches word spacing to force a
+   straight right edge, opening uneven gaps and vertical rivers of white. A
+   comfortable measure and balanced heading wraps do the job properly. */
+.sec-head {
+  display: block;
+  max-width: none;
+  margin-bottom: 44px;
+}
+.sec-head h2 {
+  font-size: clamp(33px, 5.0vw, 62px);
+  line-height: 1.04;
+  letter-spacing: -0.028em;
+  text-wrap: balance;
+  margin-bottom: 0;
+}
+.sec-head p {
+  margin-top: 18px;
+  max-width: 62ch;
+  font-size: 17px;
+}
+
+@media (min-width: 900px) {
+  .sec-head {
+    display: grid;
+    /* Even split, so the intro starts on the horizontal midline. */
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    gap: 48px;
+    grid-template-areas: "eyebrow eyebrow" "head intro";
+    align-items: start;          /* first lines share a baseline */
+  }
+  .sec-head p {
+    margin-top: 10px;            /* optical: aligns with the cap height above */
+    max-width: none;             /* the column sets the measure */
+    font-size: 18px;
+  }
+}
+
+/* the team name carries the brand line in the footer */
+.foot-brand { color: var(--text); font-weight: 600; }
+.foot-brand i { font-style: normal; color: var(--faint); font-weight: 400; }
+
+
+/* --- section eyebrow ------------------------------------------------------
+   A short label above the heading, prefixed with a rule. It names the section
+   in one or two words so the big heading can be a statement rather than a
+   label. */
+.eyebrow-rule {
+  display: flex; align-items: center; gap: 12px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .14em;
+  text-transform: uppercase; color: var(--muted);
+  margin-bottom: 18px;
+}
+.eyebrow-rule::before {
+  content: ""; width: 26px; height: 2px; border-radius: 1px;
+  background: var(--risk); flex: none;
+}
+
+@media (min-width: 900px) {
+  .sec-head .eyebrow-rule { grid-area: eyebrow; margin-bottom: 14px; }
+  .sec-head h2 { grid-area: head; }
+  .sec-head p  { grid-area: intro; margin-top: 4px; }
+}
+
+/* The sticky header overlaps anything scrolled to the top of the viewport, so
+   scroll targets keep a margin equal to its height. */
+#detail { scroll-margin-top: 92px; }

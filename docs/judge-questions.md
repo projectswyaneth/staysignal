@@ -187,6 +187,39 @@ needs a competitive counter-offer, not an apology for a tower.
 
 ---
 
+## "You feed it with CSV files. Surely that is not how it would work at Hutch?"
+
+Correct, and it is a fair thing to probe.
+
+The CSV exists because a laptop has no warehouse attached to it. What the system
+actually consumes is **four tables**, and a table does not care how it arrives:
+a file, an answer to a SQL query, or a stream. In production it is a query.
+
+```python
+cells = pd.read_csv("data/cells_weekly.csv")        # on our laptops
+cells = pd.read_sql("SELECT * FROM CELLS_WEEKLY", conn)   # at Hutch
+```
+
+After either line it is the same object in memory. The features, the model and
+the console cannot tell which one ran.
+
+`integrations/oss_adapter.py` provides `from_sql_warehouse()` for any DB-API
+connection — Snowflake, Oracle, Teradata, BigQuery, Postgres. We do not name a
+vendor, because Hutch said "the data warehouse" without saying which, and
+assuming would be worse than asking.
+
+And it is **tested**: the adapter's self-test builds a SQLite database from the
+extracts, reads it back through the SQL path, and checks the tables come out
+identical to the file path. SQLite is the only SQL engine we can reach without
+an account — but it is the same code a Snowflake connection would run.
+
+One more thing worth saying if they press on scale: the weekly feature build is
+a `GROUP BY`, and a warehouse does that better than pandas. Against millions of
+subscribers the right move is to push that aggregation into the warehouse and
+pull one row per customer instead of twenty-six.
+
+---
+
 ## "Why not a neural network, or an LLM, or a transformer?"
 
 Because the challenge requires the system to explain its decisions, and a linear

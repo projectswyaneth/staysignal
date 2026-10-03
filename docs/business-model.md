@@ -59,35 +59,35 @@ counted six months ahead.
 
 | Measure | Value |
 |---|---|
-| Revenue protected per customer, 6 months | **Rs. 95.22** |
-| Revenue protected per customer per month | **Rs. 15.87** |
-| Offers sent per 1,000 customers | 200 |
-| Of every 150 offers, sent to someone who was not leaving | 59 |
+| Revenue protected per customer, 6 months | **Rs. 96.45** |
+| Revenue protected per customer per month | **Rs. 16.07** |
+| Offers sent per 1,000 customers | 144 |
+| Of every 144 offers, sent to someone who was not leaving | 51 |
 
 The three strategies, side by side:
 
 | Strategy | Revenue lost | Against doing nothing |
 |---|---|---|
-| Contact nobody | Rs. 1,004,070 | — |
-| Contact everybody (blanket discount) | Rs. 1,526,004 | **Rs. 521,934 worse** |
-| **Contact who the model flags** | **Rs. 932,656** | **Rs. 71,414 better** |
+| Contact nobody | Rs. 1,614,006 | — |
+| Contact everybody (blanket discount) | Rs. 2,324,699 | **Rs. 710,693 worse** |
+| **Contact who the model flags** | **Rs. 1,517,559** | **Rs. 96,447 better** |
 
 Two things to notice.
 
-The **59 wasted offers out of 150** are not an embarrassment to be hidden. They
-are the price of a 61%-precise model, they are already subtracted inside the
-Rs. 932,656, and they are the reason the threshold sits at 0.67 instead of
-lower. Any pitch that claims no wasted offers has not done the arithmetic.
+The **51 wasted offers out of 144** are not an embarrassment to be hidden. They
+are the price of a 65%-precise model, they are already subtracted inside the
+Rs. 1,517,559, and they are the reason the threshold sits where it does rather
+than lower. Any pitch that claims no wasted offers has not done the arithmetic.
 
 **Blanket discounting is worse than doing nothing.** Contacting everybody costs
-Rs. 521,934 more than sitting on your hands, because the discount goes to the
+Rs. 710,693 more than sitting on your hands, because the discount goes to the
 81% who were never leaving. This is the single most useful finding in the
 project, and it is a business finding, not a technical one.
 
 ### Scaling the case
 
-Rs. 15.87 per customer per month, applied to a 3.6 million prepaid base, is
-roughly **Rs. 57 million a month**.
+Rs. 16.07 per customer per month, applied to a 3.6 million prepaid base, is
+roughly **Rs. 58 million a month**.
 
 That number is arithmetic, not a measurement, and it is honest only with its
 conditions attached:
@@ -182,11 +182,59 @@ because it requires giving up revenue this quarter on purpose.
 
 ---
 
+## 6b. A second revenue stream: the system finds gaps in the catalogue
+
+Everything above is about *protecting* revenue. The same detection also *finds*
+revenue, and this came out of a case we originally got wrong.
+
+The system sizes each customer's package against what they actually use. Most of
+the time that produces a straightforward recommendation: downgrade someone paying
+for 40 GB and using 3, upgrade someone capped at 5 GB and topping up every week.
+
+But some customers sit at the **edge of the catalogue**, and there the
+recommendation has nowhere to go:
+
+| Situation | What a naive system says | What is actually true |
+|---|---|---|
+| Heavy user already on the largest package | "Switch to Unlimited" — the plan they already have | **Hutch has no package for this customer** |
+| Very light user already on the smallest package | "Switch to Lite 5GB" — the plan they already have | There is no cheaper entry point to offer |
+
+These are not customer problems. They are **product gaps**, and the second column
+is a message nobody should ever receive. StaySignal now labels them as such and
+routes them to the product team instead of to retention.
+
+### Why this is commercially interesting
+
+A customer who has outgrown the top of the catalogue is, by definition, among the
+highest-spending customers in the base — and there is nothing left to sell them.
+They are simultaneously the most valuable and the most exposed: a competitor
+launching a larger package is speaking directly to them.
+
+In the demo base of 150 customers, 9 sit at a catalogue edge and together
+represent **Rs. 10,496 of monthly spend**, Rs. 6,979 of it at the top of the
+range. Two individual customers paying Rs. 3,876 and Rs. 3,103 a month have no
+upgrade available to them.
+
+### The recommendation to Hutch
+
+**Widen the top of the data catalogue.** A tier between the current largest
+package and true unlimited — or several unlimited variants differentiated by
+speed, night-time allowance or family sharing — converts a retention problem into
+an upsell. Today those customers can only be given a loyalty bonus, which costs
+margin and sells nothing.
+
+This is a product decision for Hutch, not something StaySignal can implement. What
+StaySignal contributes is the evidence: a monthly count of customers pressing
+against each edge of the catalogue, their spend, and how fast that group is
+growing. Demand that appears outside the product range is normally invisible,
+because no system is looking for a package that does not exist.
+
 ## 7. How it operates inside Hutch
 
 **Nothing about the architecture asks Hutch to change how it works.**
 
-- The risk engine reads Hutch's own data warehouse. Customer data never leaves
+- The risk engine reads Hutch's own data warehouse. StaySignal adds no new
+  destination for customer data — it does not leave
   Hutch's systems — which also removes the data-protection objection before it
   is raised.
 - Offers go out through Hutch's existing SMS gateway. No new channel.
@@ -255,11 +303,11 @@ insurance renewals, gyms. The engine is the same; the four causes change.
   arrives — the pipeline is already written for it.
 - The 15% offer cost and 35% save rate are **stated assumptions**, not measured
   values. Section 5 is our answer to that, and Phase 1 is our fix.
-- The Rs. 57 million a month is **extrapolation**, with its conditions printed
+- The Rs. 58 million a month is **extrapolation**, with its conditions printed
   next to it in section 3.
-- **Offer fatigue is real and we have not modelled it.** A customer contacted
-  every month stops reading the messages. A production system needs a contact
-  frequency cap.
+- **Offer fatigue is capped, not measured.** A 30-day contact window stops the
+  same customer being messaged repeatedly, but the right length of that window
+  is a guess until it is tested.
 - Marketing SMS is subject to consent rules. A real deployment has to check the
   do-not-contact list before it sends anything, and we have not built that.
 - 39% of our offers reach people who were not leaving. That cost is counted, but
@@ -274,13 +322,13 @@ believing the numbers that were true.
 
 > The Sri Lankan mobile market shrank 1% last year. There are no new customers
 > to win, so the only growth left is keeping the ones you have. The industry's
-> answer is a blanket discount — and we measured it: on 750 customers, blanket
-> discounting lost Rs. 521,934 *more* than doing nothing at all, because the
+> answer is a blanket discount — and we measured it: on 1,000 customers, blanket
+> discounting lost Rs. 710,693 *more* than doing nothing at all, because the
 > discount goes to the 81% who were never leaving. Targeting the customers our
-> model flags saves Rs. 71,414 against doing nothing, which is Rs. 15.87 per
-> customer per month. Our save-rate assumption could fall from 35% to 24.4%
+> model flags saves Rs. 96,447 against doing nothing, which is Rs. 16.07 per
+> customer per month. Our save-rate assumption could fall from 35% to 23.4%
 > before that stops being true. It costs no GPU and no new infrastructure,
-> because the model is eleven multiplications. And in four weeks with one
+> because the model is 24 multiplications. And in four weeks with one
 > holdout region, every assumption in this pitch becomes a measurement.
 
 ---

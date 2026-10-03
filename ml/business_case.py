@@ -2,8 +2,8 @@
 StaySignal — the business case, stress-tested.
 
 train.py answers "does targeting beat the alternatives at our stated
-assumptions?". A judge will ask the harder question: "what if your
-assumptions are wrong?"
+assumptions?". This script answers the harder one: how far can those
+assumptions move before the conclusion reverses?
 
 This script answers that. It rebuilds the exact test set train.py used,
 scores it with the deployed model, and then re-runs the money calculation

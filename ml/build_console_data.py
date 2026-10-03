@@ -61,34 +61,34 @@ OWNERS = {
 
 MESSAGES = {
     "Network problem": {
-        "English": "Dear Valued Customer,\nWe are currently experiencing an unexpected service disruption due to a technical error. We sincerely apologize for the inconvenience caused. Our technical team is actively working to resolve the issue, and services will be restored as quickly as possible. Thank you. - Hutch",
-        "Sinhala": "හිතවත් පාරිභෝගිකය,\nතාක්ෂණික දෝෂයක් හේතුවෙන් දැනට අපගේ සන්නිවේදන සේවාවල බිඳවැටීමක් සිදුවී ඇත. මේ නිසා ඔබට සිදුවන අපහසුතාවයට අපගේ කණගාටුව ප්‍රකාශ කර සිටිමු. අපගේ තාක්ෂණික කණ්ඩායම මේ වන විටත් ගැටලුව නිරාකරණය කිරීමට කටයුතු කරමින් සිටී. ඉතා ඉක්මනින් සේවාව යථා තත්ත්වයට පත් කිරීමට පියවර ගන්නෙමු. ස්තූතියි. - Hutch",
-        "Tamil": "அன்பான வாடிக்கையாளரே,\nதொழில்நுட்பக் கோளாறு காரணமாக எங்களது தகவல் தொடர்பு சேவைகளில் திடீர் செயலிழப்பு ஏற்பட்டுள்ளது. இதனால் உங்களுக்கு ஏற்பட்டுள்ள அசௌகரியத்திற்கு எங்களது வருத்தத்தைத் தெரிவித்துக்கொள்கிறோம். எங்களது தொழில்நுட்பக் குழுவினர் இப்பிரச்சினையைச் சரிசெய்ய தற்போது தீவிரமாக ஈடுபட்டுள்ளதோடு, மிக விரைவில் சேவைகள் வழமைக்குக் கொண்டுவரப்படும். நன்றி. - Hutch",
+        "English": "Dear Valued Customer,\nWe are currently experiencing a service disruption due to a technical issue. We sincerely apologize for any inconvenience caused. Our technical team is actively working on it, and services will be restored as soon as possible. Thank you. - Hutch",
+        "Sinhala": "හිතවත් පාරිභෝගිකයාණනි,\nතාක්ෂණික දෝෂයක් හේතුවෙන් අපගේ සේවාවල බිඳවැටීමක් සිදුවී ඇත. ඔබට සිදු වූ අපහසුතාව පිළිබඳව අපගේ කණගාටුව ප්‍රකාශ කර සිටිමු. අපගේ තාක්ෂණික කණ්ඩායම මෙය ඉක්මනින් නිරාකරණය කිරීමට කටයුතු කරමින් සිටින අතර, සේවාවන් හැකි ඉක්මනින් යථා තත්ත්වයට පත් කරනු ඇත. ස්තූතියි. - Hutch",
+        "Tamil": "அன்பார்ந்த வாடிக்கையாளரே,\nதொழில்நுட்பக் கோளாறு காரணமாக எங்களது சேவைகளில் தற்காலிகத் தடை ஏற்பட்டுள்ளது. இதனால் உங்களுக்கு ஏற்பட்டுள்ள அசௌகரியத்திற்கு வருந்துகிறோம். எமது தொழில்நுட்பக் குழுவினர் இதனைச் சரிசெய்யச் செயல்பட்டு வருகின்றனர். சேவைகள் விரைவில் வழமைக்குத் திரும்பும். நன்றி. - Hutch",
     },
     "Bill shock": {
-        "English": "Dear Valued Customer,\nYou spent an extra Rs. {overage}/- on data last month due to exceeding your package limit. Switch to our \"{better_plan}\" package to enjoy more data for the same amount. Reply YES to switch. - Hutch",
-        "Sinhala": "හිතවත් පාරිභෝගිකය,\nපසුගිය මාසයේ ඔබගේ ඩේටා සීමාව ඉක්මවීම නිසා අමතරව රු. {overage}/-ක මුදලක් වැයවී ඇත. අපගේ \"{better_plan}\" පැකේජය වෙත මාරු වීමෙන් එම මුදලටම වැඩි ඩේටා ප්‍රමාණයක් ලබාගත හැක. මාරු වීම සඳහා YES ලෙස reply කරන්න. - Hutch",
-        "Tamil": "அன்பான வாடிக்கையாளரே,\nகடந்த மாதம் உங்கள் டேட்டா பேக்கேஜ் எல்லை முடிந்ததால், மேலதிகமாக ரூ. {overage}/- வசூலிக்கப்பட்டுள்ளது. எங்களின் \"{better_plan}\" பேக்கேஜிற்கு மாறுவதன் மூலம் அதே தொகைக்கு அதிக டேட்டாவைப் பெற்றுக்கொள்ளலாம். மாற விரும்பினால் YES என reply செய்யவும். - Hutch",
+        "English": "Dear Valued Customer,\nYou spent an extra Rs. {overage}/- on data last month by exceeding your plan limit. Switch to our \"{better_plan}\" package to get more data for the same budget. Reply YES to switch. - Hutch",
+        "Sinhala": "හිතවත් පාරිභෝගිකයාණනි,\nපසුගිය මාසයේ ඔබගේ ඩේටා සීමාව ඉක්මවා යාම නිසා අමතරව රු. {overage}/- ක මුදලක් වැය වී ඇත. එම මුදලටම වැඩි ඩේටා ප්‍රමාණයක් ලබාගැනීමට අපගේ \"{better_plan}\" පැකේජයට මාරු වන්න. මාරු වීමට YES ලෙස reply කරන්න. - Hutch",
+        "Tamil": "அன்பார்ந்த வாடிக்கையாளரே,\nகடந்த மாதம் உங்கள் டேட்டா எல்லை முடிந்ததால், மேலதிகமாக ரூ. {overage}/- செலவாகியுள்ளது. அதே கட்டணத்தில் அதிக டேட்டாவைப் பெற எங்களின் \"{better_plan}\" பேக்கேஜிற்கு மாறுங்கள். மாற YES என reply செய்யவும். - Hutch",
     },
     "Plan too big": {
-        "English": "Dear Valued Customer,\nYou utilized only {data_now}GB out of your {quota}GB package last month. Switch to our \"{better_plan}\" package and save Rs. {saving}/- monthly. Reply YES to switch. - Hutch",
-        "Sinhala": "හිතවත් පාරිභෝගිකය,\nපසුගිය මාසයේ ඔබගේ {quota}GB පැකේජයෙන් භාවිත කර ඇත්තේ {data_now}GB පමණි. අපගේ \"{better_plan}\" පැකේජය වෙත මාරු වීමෙන් ඔබට මසකට රු. {saving}/-ක මුදලක් ඉතිරි කරගත හැක. මාරු වීම සඳහා YES ලෙස reply කරන්න. - Hutch",
-        "Tamil": "அன்பான வாடிக்கையாளரே,\nகடந்த மாதம் உங்கள் {quota}GB பேக்கேஜில் {data_now}GB மட்டுமே பயன்படுத்தப்பட்டுள்ளது. எங்களின் \"{better_plan}\" பேக்கேஜிற்கு மாறி, மாதத்திற்கு ரூ. {saving}/- வரை சேமித்திடுங்கள். மாற விரும்பினால் YES என reply செய்யவும். - Hutch",
+        "English": "Dear Valued Customer,\nYou used only {data_now}GB out of your {quota}GB package last month. Switch to our \"{better_plan}\" package and save Rs. {saving}/- every month. Reply YES to switch. - Hutch",
+        "Sinhala": "හිතවත් පාරිභෝගිකයාණනි,\nපසුගිය මාසයේ ඔබගේ {quota}GB පැකේජයෙන් භාවිත කර ඇත්තේ {data_now}GB පමණි. අපගේ \"{better_plan}\" පැකේජයට මාරු වී මසකට රු. {saving}/- ක මුදලක් ඉතිරි කරගන්න. මාරු වීමට YES ලෙස reply කරන්න. - Hutch",
+        "Tamil": "அன்பார்ந்த வாடிக்கையாளரே,\nகடந்த மாதம் உங்கள் {quota}GB பேக்கேஜில் {data_now}GB மட்டுமே பயன்படுத்தப்பட்டுள்ளது. எங்களின் \"{better_plan}\" பேக்கேஜிற்கு மாறி, மாதம் ரூ. {saving}/- சேமித்திடுங்கள். மாற YES என reply செய்யவும். - Hutch",
     },
     "Plan too small": {
-        "English": "Dear Valued Customer,\nYou used {data_now}GB of your {quota}GB package last month and reloaded more than usual. Our \"{better_plan}\" package gives you more data for better value. Reply YES to switch. - Hutch",
-        "Sinhala": "හිතවත් පාරිභෝගිකය,\nපසුගිය මාසයේ ඔබගේ {quota}GB පැකේජයෙන් {data_now}GB ක් භාවිත කර, සුපුරුදුට වඩා වැඩියෙන් රීලෝඩ් කර ඇත. අපගේ \"{better_plan}\" පැකේජය මඟින් වඩා වාසිදායක මිලකට වැඩි ඩේටා ප්‍රමාණයක් ලබාගත හැක. මාරු වීම සඳහා YES ලෙස reply කරන්න. - Hutch",
-        "Tamil": "அன்பான வாடிக்கையாளரே,\nகடந்த மாதம் உங்கள் {quota}GB பேக்கேஜில் {data_now}GB பயன்படுத்தி, வழக்கத்தை விட அதிகமாக ரீலோட் செய்துள்ளீர்கள். எங்களின் \"{better_plan}\" பேக்கேஜ் மூலம் சிறந்த மதிப்பில் அதிக டேட்டாவைப் பெறலாம். மாற விரும்பினால் YES என reply செய்யவும். - Hutch",
+        "English": "Dear Valued Customer,\nYou used {data_now}GB of your {quota}GB package last month and reloaded extra data. Switch to our \"{better_plan}\" package for more data at a better value. Reply YES to switch. - Hutch",
+        "Sinhala": "හිතවත් පාරිභෝගිකයාණනි,\nපසුගිය මාසයේ ඔබගේ {quota}GB පැකේජයෙන් {data_now}GB ක් භාවිත කර, අමතරවද රීලෝඩ් කර ඇත. අපගේ \"{better_plan}\" පැකේජය මඟින් වඩාත් වාසිදායක ලෙස වැඩි ඩේටා ප්‍රමාණයක් ලබාගන්න. මාරු වීමට YES ලෙස reply කරන්න. - Hutch",
+        "Tamil": "அன்பார்ந்த வாடிக்கையாளரே,\nகடந்த மாதம் உங்கள் {quota}GB பேக்கேஜில் {data_now}GB பயன்படுத்தி, மேலதிகமாக ரீலோட் செய்துள்ளீர்கள். எங்களின் \"{better_plan}\" பேக்கேஜ் மூலம் சிறந்த மதிப்பில் அதிக டேட்டாவைப் பெறுங்கள். மாற YES என reply செய்யவும். - Hutch",
     },
     "Competitor offer": {
-        "English": "Dear Valued Customer,\nThank you for staying with Hutch. As a valued customer, enjoy {bonus}GB extra data absolutely free on your next reload. Reply YES to claim. - Hutch",
-        "Sinhala": "හිතවත් පාරිභෝගිකය,\nHutch සමඟ රැඳී සිටීම ගැන ඔබට ස්තූතියි. අපගේ විශේෂ පාරිභෝගිකයෙකු ලෙස, ඔබගේ මීළඟ රීලෝඩ් එක සමඟ අමතර {bonus}GB ඩේටා සම්පූර්ණයෙන්ම නොමිලේ ලබාගන්න. ලබාගැනීමට YES ලෙස reply කරන්න. - Hutch",
-        "Tamil": "அன்பான வாடிக்கையாளரே,\nHutch உடன் தொடர்ந்து இருப்பதற்கு நன்றி. எங்களின் சிறப்பு வாடிக்கையாளராக, உங்கள் அடுத்த ரீலோடுடன் மேலதிக {bonus}GB டேட்டாவை முற்றிலும் இலவசமாகப் பெற்றுக்கொள்ளுங்கள். பெற YES என reply செய்யவும். - Hutch",
+        "English": "Dear Valued Customer,\nThank you for staying with Hutch! As a special token of appreciation, enjoy {bonus}GB extra data completely free on your next reload. Reply YES to claim. - Hutch",
+        "Sinhala": "හිතවත් පාරිභෝගිකයාණනි,\nHutch සමඟ රැඳී සිටීම පිළිබඳව ඔබට ස්තූතියි! අපගේ විශේෂ පාරිභෝගිකයෙකු ලෙස, ඔබගේ මීළඟ රීලෝඩ් එක සමඟ අමතර {bonus}GB ඩේටා සම්පූර්ණයෙන්ම නොමිලේ ලබාගන්න. දීමනාව ලබාගැනීමට YES ලෙස reply කරන්න. - Hutch",
+        "Tamil": "அன்பார்ந்த வாடிக்கையாளரே,\nHutch உடன் இணைந்திருப்பதற்கு நன்றி! எமது சிறப்பு வாடிக்கையாளரான உங்களுக்கு, உங்களின் அடுத்த ரீலோடுடன் மேலதிக {bonus}GB டேட்டா முற்றிலும் இலவசம். பெற YES என reply செய்யவும். - Hutch",
     },
     "Losing interest": {
-        "English": "Dear Valued Customer,\nA special offer just to welcome you back! Enjoy an extra 5GB of Night Data completely free with your next reload. Reply YES to activate. - Hutch",
-        "Sinhala": "හිතවත් පාරිභෝගිකය,\nඔබව නැවත අප සමඟ සම්බන්ධ කරගැනීම වෙනුවෙන් විශේෂ දීමනාවක්! ඔබගේ මීළඟ රීලෝඩ් එක සමඟ රාත්‍රී කාලය සඳහා අමතර 5GB ඩේටා සම්පූර්ණයෙන්ම නොමිලේ ලබාගන්න. දීමනාව සක්‍රීය කරගැනීමට YES ලෙස reply කරන්න. - Hutch",
-        "Tamil": "அன்பான வாடிக்கையாளரே,\nஉங்களை மீண்டும் வரவேற்பதற்கான விசேட சலுகை! உங்களின் அடுத்த ரீலோடுடன் இரவு நேரத்திற்கான மேலதிக 5GB டேட்டாவை முற்றிலும் இலவசமாகப் பெற்றுக்கொள்ளுங்கள். ஆக்டிவேட் செய்ய YES என reply செய்யவும். - Hutch",
+        "English": "Dear Valued Customer,\nWe miss you! Here is an exclusive offer to welcome you back: Get 5GB extra Night Data completely free on your next reload. Reply YES to activate. - Hutch",
+        "Sinhala": "හිතවත් පාරිභෝගිකයාණනි,\nඔබව නැවත අප සමඟ සම්බන්ධ කරගැනීමට මෙන්න විශේෂ දීමනාවක්! ඔබගේ මීළඟ රීලෝඩ් එක සමඟ රාත්‍රී කාලය සඳහා අමතර 5GB ඩේටා සම්පූර්ණයෙන්ම නොමිලේ ලබාගන්න. සක්‍රීය කරගැනීමට YES ලෙස reply කරන්න. - Hutch",
+        "Tamil": "அன்பார்ந்த வாடிக்கையாளரே,\nஉங்களை மீண்டும் வரவேற்பதற்கான சிறப்புச் சலுகை! உங்களின் அடுத்த ரீலோடுடன் இரவு நேரத்திற்கான மேலதிக 5GB டேட்டாவை முற்றிலும் இலவசமாகப் பெறுங்கள். ஆக்டிவேட் செய்ய YES என reply செய்யவும். - Hutch",
     },
 }
 
@@ -183,11 +183,32 @@ def main():
         quota_fit = float(b.loc[cid, "data"]) * 4.33 / max(float(st.data_quota_gb), 1)
         cause = diagnose(x, quota_fit)
 
+        # A customer already on the smallest or the largest package cannot be
+        # moved further in that direction. Telling them to switch to the plan
+        # they are already on is nonsense, and it is also the more interesting
+        # case: demand sitting outside the catalogue is a PRODUCT gap, not a
+        # customer problem, and it belongs in front of the product team.
+        gap = None
         if cause == "Plan too big":
             better = SMALLER[st.plan]
-            saving = max(PLAN_PRICES[st.plan] - PLAN_PRICES[better], 0)
-        elif cause in ("Bill shock", "Plan too small"):
-            better, saving = BIGGER[st.plan], 0
+            if better == st.plan:
+                gap = "No smaller package exists"
+                cause, better, saving = "Losing interest", st.plan, 0
+            else:
+                saving = max(PLAN_PRICES[st.plan] - PLAN_PRICES[better], 0)
+        elif cause == "Plan too small":
+            better = BIGGER[st.plan]
+            if better == st.plan:
+                gap = "Already on the largest package — demand above the catalogue"
+                cause, better, saving = "Competitor offer", st.plan, 0
+            else:
+                saving = 0
+        elif cause == "Bill shock":
+            better = BIGGER[st.plan]
+            saving = 0
+            if better == st.plan:
+                gap = "Charged extra on the largest package — no bigger plan to move to"
+                cause, better = "Competitor offer", st.plan
         else:
             better, saving = st.plan, 0
 
@@ -249,6 +270,7 @@ def main():
             "action": ACTIONS[cause],
             "betterPlan": better,
             "saving": saving,
+            "productGap": gap,
             "messages": {lang: text.format(**fill)
                          for lang, text in MESSAGES[cause].items()},
         })
@@ -279,6 +301,12 @@ def main():
     print("  causes:")
     for cause, n in counts.items():
         print(f"    {cause:<18} {n}")
+    gaps = [c for c in customers if c["productGap"]]
+    if gaps:
+        print(f"  product gaps (demand outside the catalogue): {len(gaps)}")
+        from collections import Counter
+        for reason, n in Counter(c["productGap"] for c in gaps).items():
+            print(f"    {reason}: {n}")
     held = [c for c in customers if c["hold"]]
     print(f"  held back by policy: {len(held)}")
     kinds = pd.Series([c["cellKind"] for c in customers]).value_counts()

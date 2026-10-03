@@ -41,17 +41,17 @@
     "home_share_ratio": "Time at home vs own normal",
     "mobility_ratio": "Towers visited vs own normal",
     "regions_ratio": "Districts visited vs own normal",
-    "cell_drop_delta": "Their tower's call drops (vs its own normal)",
+    "cell_drop_delta": "Their tower's call drops vs its normal",
     "cell_sinr_delta": "Their tower's signal quality loss",
     "cell_congestion": "Their tower's congestion",
     "cell_outage_hours": "Their tower's outage hours",
     "cell_congestion_delta": "Their tower's congestion growth",
-    "cell_interference": "Signal loss their tower's own load cannot explain",
+    "cell_interference": "Unexplained signal loss on their tower",
     "has_overage": "Was charged extra",
     "complaints": "Complaints last month",
     "tenure_months": "Months with Hutch",
     "monthly_spend": "Monthly spend",
-    "market_pressure": "Competitor campaign pressure in their district"
+    "market_pressure": "Competitor pressure in their district"
   },
   "mean": [
     0.6568239387972666,
