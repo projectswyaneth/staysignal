@@ -3,7 +3,7 @@
 **IgnitX by Hutch 2026 · Track B · Challenge 4.2.3 — Silent Churn Signal**
 Team Falconyx · University of Sri Jayewardenepura
 Repository: <https://github.com/projectswyaneth/staysignal>
-Live prototype: <https://staysignalbyfalconyx.netlify.app>
+Live prototype: <https://staysignal.netlify.app>
 
 > All data in this document is simulated. No Hutch API, credential, production
 > system or customer record was used, in line with the hackathon guidelines.
@@ -616,7 +616,7 @@ Editable source: [`architecture.html`](architecture.html).
 
 ## 9. Prototype
 
-Live: <https://staysignalbyfalconyx.netlify.app>
+Live: <https://staysignal.netlify.app>
 
 A static console — no install, no login, no server. It shows the ranked queue,
 the evidence behind each score (the model's actual contributions, computed in the
@@ -708,6 +708,8 @@ Phase table, owners, milestones, dependencies and risks:
 | The economics, stress-tested | [`reports/business-case.md`](../reports/business-case.md) |
 | The integration contract | [`integrations/oss_adapter.py`](../integrations/oss_adapter.py) |
 | Panel questions and answers | [judge-questions.md](judge-questions.md) |
+| Predictive model disclosure, §6.1–6.6 | [model-disclosure.md](model-disclosure.md) |
+| Low-confidence and incorrect-output handling | [model-disclosure.md](model-disclosure.md) §6.3.10 |
 
 ---
 

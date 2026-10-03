@@ -35,6 +35,12 @@ customer's own language.
 
 **Team Falconyx** · University of Sri Jayewardenepura
 
+<br>
+
+[![StaySignal console](docs/console.png)](https://staysignal.netlify.app)
+
+<sub>The live console — 150 simulated customers, scored in the browser as you click.</sub>
+
 </div>
 
 ---
