@@ -241,7 +241,7 @@ because no system is looking for a package that does not exist.
 - The integration point is the API we built: `POST /score/batch` takes up to
   5,000 customers per call. A nightly job scores the base and writes the flags
   into the CRM. That is the whole integration.
-- The four messages already exist in Sinhala, Tamil and English, because a
+- The six messages already exist in Sinhala, Tamil and English, because a
   retention message in the wrong language is not a retention message.
 
 ### Rollout, in the order that de-risks it
