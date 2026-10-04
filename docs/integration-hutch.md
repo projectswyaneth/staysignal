@@ -1,9 +1,11 @@
 # Integrating StaySignal with Hutch
 
 > **Status:** designed against sources Hutch IT confirmed on 1 October 2026.
-> No Hutch API, credential, production system or data was used during the
-> hackathon, in line with the guidelines. Every field name below is either
-> confirmed by Hutch or clearly labelled as our assumption.
+> Hutch has since told us that its data warehouse runs on **Snowflake**, and
+> this document is updated to match. No Hutch API, credential, production
+> system or data was used during the hackathon, in line with the guidelines,
+> and we have not connected to Hutch's Snowflake account. Every field name
+> below is either confirmed by Hutch or clearly labelled as our assumption.
 
 ---
 
@@ -14,7 +16,7 @@
 | 1 | Does Hutch use a CEM platform? | **Yes — but its data is not exposed to third-party systems.** |
 | 2 | Which system holds per-cell KPIs (drop rate, SINR, PRB)? | **OSS / NMS — available.** |
 | 3 | Is subscriber-to-serving-cell history available from CDR / xDR? | **Yes.** |
-| 4 | Which system holds prepaid recharge and usage history? | **The data warehouse.** |
+| 4 | Which system holds prepaid recharge and usage history? | **The data warehouse, which runs on Snowflake.** |
 | 5 | Preferred integration style — REST, Kafka or warehouse batch? | **Any of the three.** |
 
 Four of the five answers confirm that every input StaySignal needs already
@@ -27,13 +29,15 @@ A CEM platform that does not expose data to third-party systems rules out one
 architecture completely: StaySignal as an external service that consumes CEM
 output. We think that is the right call by Hutch, and the design follows it:
 
-- StaySignal **runs inside Hutch's boundary** — their VM, their container
-  platform, their data centre. It is not a SaaS product and there is no vendor
-  endpoint.
-- It **never reads from the CEM.** Its inputs are OSS, CDR and the warehouse.
-- **No subscriber record leaves the building to be scored.** There is no LLM
-  call, no external API, no vendor telemetry. The model is 24 numbers in a JSON
-  file; scoring is arithmetic.
+- StaySignal **runs inside Hutch's boundary** — their VM or their container
+  platform, on a network that can already reach their Snowflake account. It is
+  not a SaaS product and there is no vendor endpoint.
+- It **never reads from the CEM.** Its inputs are OSS, CDR and the Snowflake
+  warehouse.
+- **No subscriber record is sent anywhere new to be scored.** StaySignal reads
+  only from Hutch's own systems: OSS, CDR and their Snowflake account. There is
+  no LLM call, no external API, no vendor telemetry. The model is 24 numbers in
+  a JSON file; scoring is arithmetic.
 - The only external input is **district-level market data** containing no
   personal information whatsoever — counts and dates, by district.
 
@@ -96,7 +100,7 @@ never need, store or want a subscriber's movement trail. A count of cells and a
 count of districts is enough to tell a traveller from a leaver, and it is the
 least invasive form of the signal that still works.
 
-### 2.3 `customers_static` — from the prepaid data warehouse ✅ confirmed
+### 2.3 `customers_static` — from the prepaid data warehouse (Snowflake) ✅ confirmed
 
 One row per subscriber: `region`, `language`, `plan`, `data_quota_gb`,
 `monthly_spend_lkr`, `months_with_hutch`, `overage_charges_lkr`,
@@ -146,26 +150,46 @@ per source:
 Nothing else in the repository is touched — not the features, not the model, not
 the console.
 
-### Reading from a warehouse rather than from files
+### Reading from Snowflake rather than from files
 
 The CSV loader exists because a laptop has no warehouse attached to it. The
-production path is `from_sql_warehouse()`, which takes any DB-API connection or
-SQLAlchemy engine:
+production path is `from_sql_warehouse()`, pointed at Hutch's Snowflake account:
 
 ```python
 import snowflake.connector
 conn = snowflake.connector.connect(
-    account="hutch_xy12345", user="STAYSIGNAL_READER",
+    account="<hutch_account>",               # placeholder
+    user="STAYSIGNAL_READER",                # placeholder
+    role="STAYSIGNAL_READ_ONLY",             # placeholder
     password=os.environ["SF_PASSWORD"],      # never in the code
-    warehouse="ANALYTICS_WH", database="PREPAID")
+    warehouse="ANALYTICS_WH",                # placeholder
+    database="PREPAID")                      # placeholder
 
 frames = from_sql_warehouse(conn, schema="PUBLIC", since_week=1)
 ```
 
-We deliberately do **not** name a vendor in the design. Hutch said "the data
-warehouse" and did not say which one; Snowflake, Oracle, Teradata, BigQuery and
-Postgres all speak SQL and all work through this one function. Naming a product
-Hutch may not run would be assuming something about their infrastructure.
+**What is confirmed and what is assumed.** Hutch has confirmed that the
+warehouse is Snowflake. The account, role, virtual warehouse, database and
+schema names above are **placeholders**: we have not been given the real ones.
+For a service account, Hutch's security team would choose the authentication
+method (key-pair authentication is the usual choice over a password).
+
+**Access needed is read-only.** One role with `SELECT` on the tables or views
+that back the four contracts in section 2. StaySignal does not need to create,
+change or delete anything in the warehouse.
+
+**Which tables are in Snowflake.** Hutch confirmed that recharge and usage
+history live in the warehouse. We have **not** confirmed whether the OSS cell
+KPIs and the CDR serving-cell aggregates are also landed in Snowflake:
+
+- If they are, all four tables arrive through this one connection.
+- If they are not, those two arrive as extracts through the file loader, and
+  the adapter validates and joins them exactly the same way.
+
+**Not locked to one vendor.** `from_sql_warehouse()` takes any DB-API
+connection or SQLAlchemy engine, so the same function would work against
+Oracle, Teradata, BigQuery or Postgres. Only the connection object is specific
+to Snowflake.
 
 No file is created anywhere on this path.
 
@@ -174,9 +198,12 @@ SQLite database from the extracts, reads it back through `from_sql_warehouse()`,
 and checks the resulting tables are identical to the file path. SQLite is the
 one SQL engine available to us without an account — but the code under test is
 the code a Snowflake connection would run. Only the connection object differs.
+We have **not** run it against Snowflake itself, so Snowflake-specific details
+(upper-case column names, data types) still need a first test run in Hutch's
+environment.
 
 **At real scale, push the aggregation down.** The weekly feature build is a
-`GROUP BY`, and a warehouse does that far faster than pandas can. Against a base
+`GROUP BY`, and Snowflake does that far faster than pandas can. Against a base
 of millions, the right shape is to compute the recent-window and baseline-window
 aggregates in SQL and pull **one row per customer** rather than twenty-six:
 
@@ -195,9 +222,10 @@ change — only where the arithmetic happens.
 
 Worth stating carefully, because the loose version of this claim is wrong.
 
-If Hutch's warehouse is a cloud product, their data is already in that cloud —
-that was Hutch's decision, made before StaySignal existed. What we can honestly
-claim is narrower and still strong:
+Hutch's warehouse is Snowflake, which is a cloud data platform. Their data is
+already in that cloud — that was Hutch's decision, made before StaySignal
+existed. So we do not claim that data "never leaves the building". What we can
+honestly claim is narrower and still strong:
 
 > **StaySignal adds no new destination for customer data.** It reads from where
 > Hutch already keeps it, and sends nothing anywhere else. No external API, no
@@ -228,18 +256,23 @@ confirms both failures are caught.
 
 ## 4. Deployment
 
-### Recommended: nightly warehouse batch
+### Recommended: nightly Snowflake batch
 
 ```
-02:00  warehouse export        ->  /staysignal/inbox/*.parquet
-02:20  adapter + validation    ->  four canonical tables (or a rejection report)
-02:30  feature build           ->  one row per subscriber
-02:35  score + suppress        ->  ranked queue + held-back queue
-02:40  publish                 ->  CEM console / campaign system
+02:00  Snowflake query (read-only) ->  aggregated rows, pulled over the connection
+02:20  adapter + validation        ->  four canonical tables (or a rejection report)
+02:30  feature build               ->  one row per subscriber
+02:35  score + suppress            ->  ranked queue + held-back queue
+02:40  publish                     ->  CEM console / campaign system
 ```
 
-The whole run is minutes of CPU on one machine. The heavy step is a `group by`
-per table — not the model, which is 24 multiplications per subscriber.
+No export file is written: the job queries Snowflake directly. If Hutch
+prefers, the ranked queue can also be written back to a single results table in
+Snowflake, which would need `INSERT` on that one table only.
+
+The heavy step is a `group by` per table, which runs inside Snowflake on
+Hutch's own virtual warehouse — not the model, which is 24 multiplications per
+subscriber. The scoring side is minutes of CPU on one machine.
 
 REST and Kafka transports are **specified** in the adapter but deliberately left
 unimplemented: writing them against a guessed endpoint would be fiction, and
@@ -253,7 +286,13 @@ the same four tables anyway. Streaming adds operational cost and no accuracy.
 | 150,000 | ~1 min | < 1 s | ~25 MB |
 | 1,000,000 | ~6 min | ~2 s | ~170 MB |
 
-Single commodity VM. No GPU. No external API. No per-customer cost.
+These timings are for the feature build running in pandas. With the
+aggregation pushed down to Snowflake we expect it to be faster, but we have not
+measured that.
+
+Single commodity VM. No GPU. No external API. No per-customer cost. The nightly
+query does use Hutch's Snowflake compute, so the size of the virtual warehouse
+it runs on is Hutch's choice.
 
 ---
 
@@ -271,6 +310,10 @@ Single commodity VM. No GPU. No external API. No per-customer cost.
    or the console in this repository, or both.
 5. **Who owns the network cases.** Flagged network faults are work orders for
    the RF team, not discounts for marketing. That routing has to exist.
+6. **Snowflake access.** A read-only role for StaySignal, the virtual warehouse
+   the nightly query runs on, and the database, schema and view names that back
+   the four tables. Also whether OSS and CDR data are landed in Snowflake or
+   arrive as separate extracts.
 
 ---
 
@@ -278,6 +321,8 @@ Single commodity VM. No GPU. No external API. No per-customer cost.
 
 - We have not tested this on Hutch data, and nobody should act on the reported
   numbers until it has been.
+- We have not connected to Hutch's Snowflake account. The warehouse path is
+  tested against SQLite only, and the connection details shown are placeholders.
 - We cannot see another operator's traffic. The interference signal says *our
   own load does not explain this*, which is a strong hint and a work order — not
   proof that a named carrier is responsible.
