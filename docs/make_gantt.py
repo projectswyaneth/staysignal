@@ -1,6 +1,8 @@
 """Renders docs/gantt.png — the StaySignal implementation plan.
 
     python docs/make_gantt.py
+    
+    TEAM FALCONYX
 """
 from pathlib import Path
 
